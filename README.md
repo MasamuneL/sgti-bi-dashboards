@@ -2,7 +2,7 @@
 
 Pipeline que convierte las exportaciones CSV del **SGTI** (sistema de gestión de TI de
 un hospital) en Parquet normalizado y alimenta paneles de reportes de **solo lectura**
-(HTML autónomo, Streamlit y un modelo de Power BI con star schema, medidas y RLS).
+(HTML autónomo y Streamlit).
 
 > Este repositorio **no contiene datos reales**. Incluye datos **sintéticos** de ejemplo
 > (`sample_data/`) con el mismo esquema (43 tablas) para que puedas ver los paneles
@@ -18,8 +18,6 @@ un hospital) en Parquet normalizado y alimenta paneles de reportes de **solo lec
 - `demo/` — los mismos paneles **generados con datos sintéticos** (ábrelos ya:
   `demo/v3/index.html`).
 - `streamlit_dashboard.py`, `_v2.py`, `_v3.py` — apps Streamlit que leen Parquet en vivo.
-- `powerbi/` — artefactos de definición para Power BI Desktop: consultas M de carga,
-  relaciones, medidas DAX, roles RLS y guía de configuración.
 - `scripts/` — pipeline CSV→Parquet, validación, auditoría y generadores de paneles.
 - `docs/` — planes y documentación de cada iteración (v1/v2/v3).
 - `DATA_DICTIONARY.md` — tablas, esquemas y relaciones.
@@ -72,12 +70,6 @@ CSV del SGTI ──▶ scripts/csv_to_parquet.py ──▶ Data/parquet (43 .par
 
 `refresh_all.py` = `csv_to_parquet.py` + `validate_parquet.py` en un solo comando
 (espera "Converted 43/43" y "Validation PASSED").
-
-## Power BI
-
-No se pueden generar `.pbix` a mano; en `powerbi/` están los artefactos para pegarlos
-en Power BI Desktop: `SGTI_Load_Data.pq` (43 consultas M), `SGTI_Relationships.csv`,
-`SGTI_Measures.dax` + `SGTI_Measures_v2.dax`, `SGTI_RLS.md` y `SGTI_Setup_Guide.md`.
 
 ## Alcance
 

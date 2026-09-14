@@ -5,7 +5,7 @@ Fecha: 2026-09-12 · Alcance: **solo lectura / reportes de BI** (sin gestión, a
 ## Qué es esto
 
 Tercera versión (`v3`) de los dos paneles, que **no toca** v1 ni v2, y añade cuatro
-features de reporte más la corrección del RLS de Power BI:
+features de reporte:
 
 1. **Exportación CSV**: descargar en CSV los datos ya filtrados de cada tabla de detalle.
 2. **Ranking paramétrico top-N**: un slider global (3–20, default 10) que controla el
@@ -14,9 +14,6 @@ features de reporte más la corrección del RLS de Power BI:
    de oficios emitidos + recibidos por día, en la pestaña Resumen.
 4. **Búsqueda global**: campo de texto que filtra por subcadena en cualquier campo de
    texto del dataset activo, antes de graficar y de poblar las tablas.
-
-Además, se **reescribió** el RLS (`powerbi/SGTI_RLS.md`), que tenía DAX inválido, y se
-añadieron **medidas derivadas** en un archivo nuevo (`powerbi/SGTI_Measures_v2.dax`).
 
 ## Archivos (v1 y v2 intactas / v3 nueva)
 
@@ -28,9 +25,6 @@ añadieron **medidas derivadas** en un archivo nuevo (`powerbi/SGTI_Measures_v2.
 
 Compartido (v3): `scripts/data_quality.py` (pestaña de calidad, sin cambios) y
 `scripts/build_dashboard.py` (datasets normalizados, sin cambios).
-
-Power BI: `powerbi/SGTI_RLS.md` (reescrito), `powerbi/SGTI_Measures_v2.dax` (nuevo).
-`SGTI_Measures.dax` queda intacto.
 
 Documentación: `docs/PLAN_V3.md` (plan), este archivo (`docs/FEATURES_V3.md`).
 
@@ -77,37 +71,6 @@ El HTML v3 se abre con doble clic (Chart.js vendored en `dashboard_v3/vendor/`).
   conserva filas cuya concatenación de celdas (str, minúsculas) contiene el término; se
   aplica junto a `filtro_fecha` en cada pestaña.
 
-### RLS (`powerbi/SGTI_RLS.md`) — corrección
-Errores del RLS anterior, corregidos:
-- Usaba `RELATE()` que **no existe** en RLS (solo `RELATED`, en columnas calculadas).
-- Comparaba `coordinaciones.nombre_coordinador` — que son **nombres de persona**, no
-  correos — contra `USERPRINCIPALNAME()`.
-- Usaba `LOOKUPVALUE` mal formado.
-
-Corrección (esquema real verificado de los Parquet): la única columna con correo es
-`personal_ti.correo`. Roles:
-- `Admin_TI`: sin restricción (`TRUE()`).
-- `Coordinador`: tabla manual `Seguridad[correo, coordinacion_id]` (Power Query `Enter
-  Data`); Opción A = regla sobre `Seguridad` con relación "Ambas"; Opción B (recomendada)
-  = `coordinaciones[id] = LOOKUPVALUE(Seguridad[coordinacion_id], Seguridad[correo],
-  USERPRINCIPALNAME())` con dirección única.
-- `Tecnico`: `personal_ti[correo] = USERPRINCIPALNAME()` (propaga vía las relaciones
-  `personal_ti.id → <fact>.<fk>`).
-- `Auditor`: `TRUE()` + desmarcar las facts sensibles (`cuentas_usuario`,
-  `asignaciones_licenciamiento`, `entregas_suministro`, `ingresos_suministro`).
-
-### Medidas derivadas (`powerbi/SGTI_Measures_v2.dax`)
-13 medidas nuevas (no duplican `SGTI_Measures.dax`): per-cápita (Oficios/Empleado TI,
-Entregas per cápita, Reubicaciones/Técnico, Licencias/Empleado TI, Promedio unidades por
-entrega, Promedio contador impresoras), ratios (Ratio contestación, % entregados,
-% cancelados, Cuentas entregadas, % cuentas con negativa) y variación MoM (oficios
-recibidos, ingresos).
-
-**Hallazgo de calidad documentado en el DAX**: `cuentas_usuario.estatus` está sucio
-("Entregado" 486, "Pendiente" 112, "Se realizo entrega de la solicitud" 42, "Se genero
-negativa a solicitud" 5, objeto Excel 1). El valor literal `"Entregada"` **no existe**;
-por eso `Cuentas Entregadas Ratio` usa `SEARCH("ENTREG", UPPER(...))` en vez de igualdad.
-
 ## Verificación realizada (esta iteración, por el padre — no auto-reporte)
 
 - `build_dashboard_v3.py` genera `dashboard_v3/index.html` (605 KB) sin error; vendor
@@ -119,16 +82,11 @@ por eso `Cuentas Entregadas Ratio` usa `SEARCH("ENTREG", UPPER(...))` en vez de 
   `NaN`/`undefined` en el DOM.
 - Streamlit v3: `AppTest` → `EXCEPTIONS: []`, `TABS: 9`, `SLIDER: 1`, `TEXT_INPUT: 1`,
   `DOWNLOAD_BTN: 8`.
-- RLS y medidas: columnas referenciadas verificadas contra los esquemas reales de
-  `Data/parquet` (todas existen); DAX sintácticamente válido.
 
 ## Notas para futuras sesiones
 
 - No modificar v1 ni v2; toda iteración nueva va en v3/v4.
 - Los números de los CSV dependen del payload embebido: si cambian los Parquet, hay que
   regenerar el HTML (`build_dashboard_v3.py`); Streamlit los lee en vivo.
-- El RLS no se puede probar sin Power BI Desktop; los artefactos son definiciones para
-  pegar. Probar con `Modelo > Ver como roles` usando un UPN real (ej.
-  `usuario.ejemplo@hospital.gob.mx` para Técnico).
 - `st.download_button` de Streamlit descarga por cada pestaña; las claves deben seguir
   siendo únicas si se añaden más botones (`dl_*`).

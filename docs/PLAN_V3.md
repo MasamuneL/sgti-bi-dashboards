@@ -1,19 +1,14 @@
-# PLAN — Iteración v3 del panel (exportación + RLS + features BI)
+# PLAN — Iteración v3 del panel (reportes BI)
 
 Fecha: 2026-09-12 · Alcance: **solo lectura / reportes de BI** (sin gestión, aprobación ni flujos).
 
 ## Objetivo de esta iteración
 
-Tres frentes, todos dentro del alcance de reportes:
+Dos frentes, ambos dentro del alcance de reportes:
 
 1. **Exportación**: descargar en CSV los datos ya filtrados de cada pestaña/tabla.
-2. **RLS corregido**: el `powerbi/SGTI_RLS.md` actual tiene DAX inválido
-   (`RELATE()` no es función DAX; compara `coordinaciones.nombre_coordinador` —
-   que son **nombres de personas**, no correos — contra `USERPRINCIPALNAME()`).
-   Se reescribe contra el esquema real.
-3. **Features BI pendientes** (todas factibles como solo lectura):
-   ranking paramétrico top-N, heatmap de actividad semanal, búsqueda global y
-   medidas derivadas en DAX.
+2. **Features BI pendientes** (todas factibles como solo lectura):
+   ranking paramétrico top-N, heatmap de actividad semanal y búsqueda global.
 
 Se descartan (fuera de alcance): flujos de aprobación, gestión de stock,
 notificaciones, edición de datos.
@@ -28,9 +23,6 @@ streamlit_dashboard_v3.py      # NUEVO — copia de v2 + las mismas features
 dashboard_v3/
   index.html                   # salida (auto-generado)
   vendor/chart.umd.min.js      # copia de dashboard_v2/vendor
-powerbi/
-  SGTI_RLS.md                  # REESCRITO — DAX válido contra esquema real
-  SGTI_Measures_v2.dax         # NUEVO — medidas derivadas (no toca SGTI_Measures.dax)
 docs/
   PLAN_V3.md                   # este archivo
   FEATURES_V3.md               # documentación post-implementación
@@ -40,24 +32,6 @@ La v1 (`dashboard/`, `streamlit_dashboard.py`, `scripts/build_dashboard.py`,
 `scripts/dashboard_template.html`) y la v2 (`dashboard_v2/`,
 `streamlit_dashboard_v2.py`, `scripts/build_dashboard_v2.py`,
 `scripts/dashboard_template_v2.html`, `scripts/data_quality.py`) **quedan sin cambios**.
-
-## Esquema real relevante (fuente de verdad para RLS)
-
-- `personal_ti` (27 filas): `id`, `nombre`, `puesto`, `departamento`, **`correo`**
-  (15/27 poblados, institucionales `...@hospital.gob.mx`), `extension`, `activo`.
-- `usuarios_sistema` (23): `id`, `personal_ti_id` (→ personal_ti.id), `username`,
-  **`rol`** (ADMIN=1, COORDINADOR=3, TECNICO=19), `activo`, `ultimo_acceso`.
-- `coordinaciones` (39): `id`, `nombre`, **`nombre_coordinador` = nombres de persona**
-  (NO correos), `activo`.
-- `personal_hospital` (1663): `id`, `numero_empleado`, `coordinacion_id`,
-  `coordinacion_nombre`, `activo`. **Sin correo.**
-- `audit_log`: `usuario_id` (→ usuarios_sistema.id), `accion`, `modulo`, `timestamp`.
-
-Conclusión de diseño: la única columna que coincide con `USERPRINCIPALNAME()` es
-`personal_ti.correo`. El rol "Coordinador ve su coordinación" no es derivable de
-los datos porque `coordinaciones` guarda nombres, no correos → se resuelve con una
-tabla de mapeo manual `Seguridad` (correo → coordinacion_id), que es el patrón
-estándar de Power BI para RLS.
 
 ## Contrato de features (idéntico en HTML v3 y Streamlit v3)
 
@@ -103,9 +77,7 @@ estándar de Power BI para RLS.
   generar `dashboard_v3/index.html`, verificar en navegador.
 - **Subagente B (Streamlit v3):** crear `streamlit_dashboard_v3.py`, verificar con
   `AppTest` y en navegador.
-- **Subagente C (RLS + DAX):** reescribir `powerbi/SGTI_RLS.md` con DAX válido y
-  crear `powerbi/SGTI_Measures_v2.dax` con medidas derivadas.
-- **Verificación final (yo):** navegador HTML v3 + Streamlit v3 + revisión de DAX.
+- **Verificación final (yo):** navegador HTML v3 + Streamlit v3.
 - **Documentación (yo):** `docs/FEATURES_V3.md` + actualizar AGENTS.md.
 
 ## Criterios de verificación
@@ -117,6 +89,4 @@ estándar de Power BI para RLS.
    modo oscuro sigue operando; sin `NaN`/`undefined` en el DOM.
 4. Streamlit v3: `AppTest` sin excepciones; `st.download_button` presente;
    slider top-N; heatmap Altair; búsqueda global; 0 excepciones.
-5. RLS: DAX sintácticamente válido, solo columnas existentes, con tabla `Seguridad`
-   de mapeo documentada. Medidas derivadas compilables en DAX.
-6. `docs/FEATURES_V3.md` documenta uso, archivos y cómo regenerar.
+5. `docs/FEATURES_V3.md` documenta uso, archivos y cómo regenerar.

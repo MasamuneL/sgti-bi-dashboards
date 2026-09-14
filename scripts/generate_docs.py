@@ -191,7 +191,7 @@ def main(argv: list[str] | None = None) -> int:
     lines.append("## 4. Notas de tipo")
     lines.append("")
     lines.append("- `date32[day]`: fecha normalizada `YYYY-MM-DD`.")
-    lines.append("- `timestamp[us, tz=UTC]`: fecha-hora en UTC (desplazame la zona en el modelo de Power BI).")
+    lines.append("- `timestamp[us, tz=UTC]`: fecha-hora en UTC.")
     lines.append("- `int64` nullable: ids y cantidades; sin `Int64` de numpy por compatibilidad.")
     lines.append("- Colores `bool`: banderas `activo`, `permitido`, `puede_*`, `entregado`, `contestado`, etc.")
 

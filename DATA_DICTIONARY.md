@@ -839,6 +839,6 @@ Direccion: tabla de hechos -> tabla de dimension (1:N).
 ## 4. Notas de tipo
 
 - `date32[day]`: fecha normalizada `YYYY-MM-DD`.
-- `timestamp[us, tz=UTC]`: fecha-hora en UTC (desplazame la zona en el modelo de Power BI).
+- `timestamp[us, tz=UTC]`: fecha-hora en UTC.
 - `int64` nullable: ids y cantidades; sin `Int64` de numpy por compatibilidad.
 - Colores `bool`: banderas `activo`, `permitido`, `puede_*`, `entregado`, `contestado`, etc.

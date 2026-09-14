@@ -4,7 +4,7 @@ Contexto del proyecto **Análisis de SGTI** para futuras operaciones.
 
 ## Objetivo
 Convertir las exportaciones CSV del SGTI (sistema de gestión de TI del hospital) en
-Parquet normalizado y alimentar un modelo de Power BI (star schema + medidas + RLS).
+Parquet normalizado y alimentar paneles de reportes de BI (HTML autónomo y Streamlit).
 
 ## Alcance
 El SGTI es **solo lectura** para reportes de BI. No se proponen features de gestión,
@@ -39,12 +39,6 @@ Analisis_de_SGTI/
 ├── dashboard_v2/               # HTML v2 (index.html + vendor/)
 ├── dashboard_v3/               # HTML v3 (index.html + vendor/)
 ├── docs/                       # PLAN_V2.md, FEATURES_V2.md, PLAN_V3.md, FEATURES_V3.md
-├── powerbi/
-│   ├── SGTI_Load_Data.pq       # Power Query M: 43 consultas + fnLoadParquet
-│   ├── SGTI_Relationships.csv  # 53 relaciones 1:N (dim→fact)
-│   ├── SGTI_Measures.dax       # KPIs, YTD/QTD, tiempo, RLS-friendly
-│   ├── SGTI_RLS.md             # roles Admin_TI/Coordinador/Auditor/Técnico
-│   └── SGTI_Setup_Guide.md     # pasos para armar el modelo en Power BI Desktop
 ├── DATA_DICTIONARY.md          # generado; tablas, esquemas y relaciones
 ├── DATA_AUDIT.md               # generado; auditoría de calidad de datos
 ├── REFRESH_GUIDE.md            # refresco, gateway, cron, troubleshooting
@@ -100,6 +94,3 @@ Analisis_de_SGTI/
   path SIEMPRE deben elegir el **directorio** (`p.is_dir()`), nunca el `.zip`.
 - `source_raw[col].str.strip().ne("")` puede dar NaN/False en columnas con nulls:
   intersectar con `.notna()` en validaciones.
-- DAX usa comentarios `--`, no `//`.
-- Los archivos `.pbit`/`.pbix` no se pueden generar a mano (binario); se entregan los
-  artefactos de definición (M, DAX, relaciones, RLS) que se pegan en Power BI Desktop.
