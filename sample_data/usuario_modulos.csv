@@ -1,0 +1,13 @@
+usuario_id,modulo,permitido,puede_eliminar,puede_editar,puede_ver_todos_excepto,puede_ver_todos_excepto_minutas,puede_agregar_suministro,puede_entregar_papel_suministro,puede_asignar_toner_suministro,puede_ver_graficas_suministro,puede_ver_inventario_suministro,puede_ver_toners_suministro,puede_ver_papel_suministro,puede_ver_contratos_suministro,puede_ocultar_instrucciones,puede_aprobar_vacaciones,created_at,updated_at
+3,oficios-recibidos,true,false,true,true,true,false,true,false,true,true,true,true,true,true,true,2026-04-09T14:54:00Z,2026-05-08T08:26:00Z
+2,oficios-realizados,false,true,true,true,true,true,false,true,true,true,true,true,true,false,true,2026-06-05T11:39:00Z,2026-01-21T15:22:00Z
+1,notas,true,true,false,false,false,true,true,true,true,true,true,false,true,true,true,2026-03-12T12:54:00Z,2026-07-11T18:59:00Z
+8,cuentas,true,true,false,true,true,true,true,true,true,true,true,true,true,true,true,2026-05-31T09:27:00Z,2026-03-31T15:14:00Z
+3,suministro-toners-hojas,true,true,true,true,true,true,true,true,true,false,true,true,true,true,true,2026-01-10T11:20:00Z,2026-06-10T11:31:00Z
+1,historico-reubicaciones,true,true,true,false,true,false,true,true,true,true,false,true,true,true,false,2026-08-06T15:14:00Z,2026-06-30T15:18:00Z
+7,licenciamientos,true,true,true,true,true,true,true,true,true,true,true,true,true,false,true,2026-01-23T10:14:00Z,2026-08-17T08:11:00Z
+6,oficios-recibidos,true,false,true,true,true,true,false,true,true,true,true,true,true,true,true,2026-07-20T14:14:00Z,2026-02-09T12:24:00Z
+6,oficios-realizados,false,true,true,true,false,true,true,true,false,true,true,true,true,true,true,2026-01-02T15:38:00Z,2026-05-09T15:33:00Z
+1,notas,true,true,true,true,true,true,true,true,true,true,true,false,true,true,true,2026-06-03T15:03:00Z,2026-03-30T15:04:00Z
+1,cuentas,true,true,true,true,true,true,true,true,true,true,true,false,true,true,true,2026-07-06T09:21:00Z,2026-04-25T08:24:00Z
+3,suministro-toners-hojas,false,true,true,true,true,true,true,true,true,true,true,true,true,true,true,2026-04-20T07:58:00Z,2026-01-16T09:41:00Z

@@ -1,0 +1,27 @@
+# --- Entorno virtual ---
+.venv/
+
+# --- Datos REALES del hospital (nunca versionar) ---
+# La exportación CSV original y los Parquet derivados contienen datos personales
+# (nombres, correos institucionales, hashes de contraseña) y no deben publicarse.
+Data/
+
+# --- Parquet temporal del generador de demo ---
+.sample_parquet_tmp/
+
+# --- Dashboards con datos REALES embebidos ---
+# Los index.html en estas carpetas se generan a partir de Data/parquet y embeben
+# los datos reales. Solo demo/ (datos sintéticos) se versiona.
+dashboard/index.html
+dashboard_v2/index.html
+dashboard_v3/index.html
+
+# --- Cachés ---
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+
+# --- Sistema operativo ---
+.DS_Store
+Thumbs.db

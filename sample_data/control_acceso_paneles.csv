@@ -1,0 +1,4 @@
+id,source_id,idf_id,tipo_panel_id,nombre,activo
+1,25348,8,5,Registro de ejemplo 1,true
+2,65345,1,4,Registro de ejemplo 2,true
+3,28541,5,6,Registro de ejemplo 3,true

@@ -1,0 +1,5 @@
+id,source_id,panel_id,nombre,activo
+1,93756,8,Registro de ejemplo 1,false
+2,40953,2,Registro de ejemplo 2,true
+3,76278,1,Registro de ejemplo 3,true
+4,9698,3,Registro de ejemplo 4,true

@@ -1,0 +1,266 @@
+{
+  "database": "hraelocal1-demo",
+  "exportedAt": "2026-09-07T19:58:04.805Z",
+  "tableCount": 43,
+  "note": "Datos SINTÉTICOS de ejemplo (no son información real del hospital). Sustituir por la exportación CSV real del SGTI para datos reales.",
+  "tables": [
+    {
+      "table": "aplicativos_licencia",
+      "file": "aplicativos_licencia.csv",
+      "rows": 3,
+      "columns": 5
+    },
+    {
+      "table": "asignaciones_licenciamiento",
+      "file": "asignaciones_licenciamiento.csv",
+      "rows": 15,
+      "columns": 19
+    },
+    {
+      "table": "audit_log",
+      "file": "audit_log.csv",
+      "rows": 30,
+      "columns": 15
+    },
+    {
+      "table": "bitacora_equipo_portatil",
+      "file": "bitacora_equipo_portatil.csv",
+      "rows": 4,
+      "columns": 13
+    },
+    {
+      "table": "bitacora_omision_reportes",
+      "file": "bitacora_omision_reportes.csv",
+      "rows": 2,
+      "columns": 8
+    },
+    {
+      "table": "catalogo_suministros",
+      "file": "catalogo_suministros.csv",
+      "rows": 4,
+      "columns": 6
+    },
+    {
+      "table": "control_acceso_idfs",
+      "file": "control_acceso_idfs.csv",
+      "rows": 3,
+      "columns": 5
+    },
+    {
+      "table": "control_acceso_paneles",
+      "file": "control_acceso_paneles.csv",
+      "rows": 3,
+      "columns": 6
+    },
+    {
+      "table": "control_acceso_pisos",
+      "file": "control_acceso_pisos.csv",
+      "rows": 3,
+      "columns": 4
+    },
+    {
+      "table": "control_acceso_puertas",
+      "file": "control_acceso_puertas.csv",
+      "rows": 4,
+      "columns": 5
+    },
+    {
+      "table": "control_acceso_tarjeta_puertas",
+      "file": "control_acceso_tarjeta_puertas.csv",
+      "rows": 2,
+      "columns": 3
+    },
+    {
+      "table": "control_acceso_tarjetas",
+      "file": "control_acceso_tarjetas.csv",
+      "rows": 4,
+      "columns": 22
+    },
+    {
+      "table": "control_acceso_tipos_panel",
+      "file": "control_acceso_tipos_panel.csv",
+      "rows": 2,
+      "columns": 4
+    },
+    {
+      "table": "coordinaciones",
+      "file": "coordinaciones.csv",
+      "rows": 8,
+      "columns": 6
+    },
+    {
+      "table": "cuentas_usuario",
+      "file": "cuentas_usuario.csv",
+      "rows": 40,
+      "columns": 18
+    },
+    {
+      "table": "entregas_suministro",
+      "file": "entregas_suministro.csv",
+      "rows": 20,
+      "columns": 27
+    },
+    {
+      "table": "entregas_suministro_consumos",
+      "file": "entregas_suministro_consumos.csv",
+      "rows": 4,
+      "columns": 3
+    },
+    {
+      "table": "grupo_permisos_detalle",
+      "file": "grupo_permisos_detalle.csv",
+      "rows": 6,
+      "columns": 17
+    },
+    {
+      "table": "grupos_permisos",
+      "file": "grupos_permisos.csv",
+      "rows": 2,
+      "columns": 5
+    },
+    {
+      "table": "historico_reubicaciones_equipos",
+      "file": "historico_reubicaciones_equipos.csv",
+      "rows": 15,
+      "columns": 22
+    },
+    {
+      "table": "incidencias_acceso_escalaciones",
+      "file": "incidencias_acceso_escalaciones.csv",
+      "rows": 1,
+      "columns": 15
+    },
+    {
+      "table": "incidencias_acceso_notas_informativas",
+      "file": "incidencias_acceso_notas_informativas.csv",
+      "rows": 1,
+      "columns": 31
+    },
+    {
+      "table": "incidencias_control_acceso",
+      "file": "incidencias_control_acceso.csv",
+      "rows": 2,
+      "columns": 23
+    },
+    {
+      "table": "incidencias_control_acceso_puertas",
+      "file": "incidencias_control_acceso_puertas.csv",
+      "rows": 0,
+      "columns": 3
+    },
+    {
+      "table": "ingresos_suministro",
+      "file": "ingresos_suministro.csv",
+      "rows": 10,
+      "columns": 15
+    },
+    {
+      "table": "minutas_circulares",
+      "file": "minutas_circulares.csv",
+      "rows": 8,
+      "columns": 17
+    },
+    {
+      "table": "monitor_notifications",
+      "file": "monitor_notifications.csv",
+      "rows": 3,
+      "columns": 7
+    },
+    {
+      "table": "monitor_sites",
+      "file": "monitor_sites.csv",
+      "rows": 3,
+      "columns": 20
+    },
+    {
+      "table": "notas_informativas",
+      "file": "notas_informativas.csv",
+      "rows": 30,
+      "columns": 17
+    },
+    {
+      "table": "oficios_realizados",
+      "file": "oficios_realizados.csv",
+      "rows": 30,
+      "columns": 22
+    },
+    {
+      "table": "oficios_recibidos",
+      "file": "oficios_recibidos.csv",
+      "rows": 40,
+      "columns": 25
+    },
+    {
+      "table": "perfiles_sistema",
+      "file": "perfiles_sistema.csv",
+      "rows": 3,
+      "columns": 5
+    },
+    {
+      "table": "personal_hospital",
+      "file": "personal_hospital.csv",
+      "rows": 12,
+      "columns": 21
+    },
+    {
+      "table": "personal_ti",
+      "file": "personal_ti.csv",
+      "rows": 6,
+      "columns": 9
+    },
+    {
+      "table": "pisos_reubicacion",
+      "file": "pisos_reubicacion.csv",
+      "rows": 4,
+      "columns": 5
+    },
+    {
+      "table": "puestos_cargo",
+      "file": "puestos_cargo.csv",
+      "rows": 4,
+      "columns": 4
+    },
+    {
+      "table": "usuario_grupo",
+      "file": "usuario_grupo.csv",
+      "rows": 6,
+      "columns": 3
+    },
+    {
+      "table": "usuario_minutas_exclusiones",
+      "file": "usuario_minutas_exclusiones.csv",
+      "rows": 0,
+      "columns": 3
+    },
+    {
+      "table": "usuario_modulos",
+      "file": "usuario_modulos.csv",
+      "rows": 12,
+      "columns": 19
+    },
+    {
+      "table": "usuario_notas_exclusiones",
+      "file": "usuario_notas_exclusiones.csv",
+      "rows": 2,
+      "columns": 3
+    },
+    {
+      "table": "usuarios_sistema",
+      "file": "usuarios_sistema.csv",
+      "rows": 6,
+      "columns": 10
+    },
+    {
+      "table": "vacaciones_incidencias",
+      "file": "vacaciones_incidencias.csv",
+      "rows": 10,
+      "columns": 13
+    },
+    {
+      "table": "vacaciones_incidencias_fechas",
+      "file": "vacaciones_incidencias_fechas.csv",
+      "rows": 20,
+      "columns": 3
+    }
+  ]
+}

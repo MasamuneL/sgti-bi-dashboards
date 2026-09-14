@@ -1,0 +1,2 @@
+id,incidencia_id,numero_atencion_interna,estatus,observaciones_proveedor,pdf_nombre_original,pdf_nombre_archivo,pdf_ruta,pdf_mime,pdf_tamano,pdf_subido_at,registrado_por_id,actualizado_por_id,created_at,updated_at
+1,5,INT-0001,Pendiente,dato-sintetico,dato-sintetico,dato-sintetico,dato-sintetico,dato-sintetico,76256,2026-03-27T17:45:00Z,3,1,2026-06-07T18:44:00Z,2026-05-02T09:46:00Z

@@ -1,0 +1,7 @@
+id,personal_ti_id,username,password_hash,rol,activo,ultimo_acceso,created_at,updated_at,avatar_url
+1,4,usuario.ejemplo1,hash-sintetico-no-real,COORDINADOR,true,2026-08-06T13:05:00Z,2026-02-12T17:17:00Z,2026-08-30T13:14:00Z,dato-sintetico
+2,4,usuario.ejemplo2,hash-sintetico-no-real,TECNICO,true,2026-01-27T11:57:00Z,2026-08-07T14:56:00Z,2026-02-03T18:02:00Z,dato-sintetico
+3,7,usuario.ejemplo3,hash-sintetico-no-real,TECNICO,true,2026-08-02T10:51:00Z,2026-04-05T18:13:00Z,2026-03-13T11:57:00Z,dato-sintetico
+4,6,usuario.ejemplo4,hash-sintetico-no-real,COORDINADOR,false,2026-02-25T17:25:00Z,2026-05-16T17:45:00Z,2026-04-02T15:01:00Z,dato-sintetico
+5,7,usuario.ejemplo5,hash-sintetico-no-real,TECNICO,true,2026-01-08T14:12:00Z,2026-03-10T15:13:00Z,2026-05-04T07:01:00Z,dato-sintetico
+6,3,usuario.ejemplo6,hash-sintetico-no-real,TECNICO,true,2026-05-04T18:26:00Z,2026-08-03T14:20:00Z,2026-03-12T11:20:00Z,dato-sintetico

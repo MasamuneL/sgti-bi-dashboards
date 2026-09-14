@@ -1,0 +1,4 @@
+id,nombre_perfil,descripcion,activo,created_at
+1,dato-sintetico,Dato de muestra sintético (no es información real).,false,2026-08-26T17:56:00Z
+2,dato-sintetico,Dato de muestra sintético (no es información real).,true,2026-04-23T10:40:00Z
+3,dato-sintetico,Dato de muestra sintético (no es información real).,true,2026-06-13T13:21:00Z

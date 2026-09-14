@@ -1,0 +1,4 @@
+pandas>=2.0
+pyarrow>=14.0
+python-dateutil>=2.8
+streamlit>=1.60   # opcional: streamlit_dashboard.py (alternativa al HTML)

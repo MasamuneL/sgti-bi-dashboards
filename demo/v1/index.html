@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SGTI — Panel de Gestión de TI</title>
+<script src="vendor/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg:#f5f6f8; --card:#ffffff; --ink:#1c2430; --muted:#667085;
+    --line:#e5e7eb; --accent:#2563eb; --accent-2:#4f46e5; --accent-soft:#eff4ff;
+    --green:#16a34a; --amber:#d97706; --red:#dc2626; --gray:#64748b;
+    --radius:14px;
+    --shadow:0 1px 2px rgba(16,24,40,.05),0 1px 3px rgba(16,24,40,.07);
+    --shadow-lg:0 6px 20px rgba(16,24,40,.08);
+    --hover:#eceef2; --thead:#f6f7f9; --thead-hover:#eef0f3;
+    --row-border:#f0f1f4; --row-hover:#f8fafc; --heading:#1f2937; --grid:#eef0f3;
+    --input:#ffffff; --tooltip:#1c2430;
+    color-scheme:light;
+  }
+  [data-theme="dark"]{
+    --bg:#0b1220; --card:#141d2e; --ink:#e2e8f0; --muted:#94a3b8;
+    --line:#2a3446; --accent:#3b82f6; --accent-2:#6366f1; --accent-soft:#1c2a44;
+    --green:#22c55e; --amber:#f59e0b; --red:#ef4444; --gray:#9ca3af;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 1px 3px rgba(0,0,0,.35);
+    --shadow-lg:0 6px 22px rgba(0,0,0,.4);
+    --hover:#1e2a40; --thead:#17223a; --thead-hover:#1f2c48;
+    --row-border:#223047; --row-hover:#1c2740; --heading:#e2e8f0; --grid:#2a3648;
+    --input:#1a2436; --tooltip:#1e293b;
+    color-scheme:dark;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    font-size:14px;line-height:1.45}
+  .wrap{max-width:1240px;margin:0 auto;padding:18px 20px 70px}
+
+  .masthead{position:relative;background:var(--card);border:1px solid var(--line);
+    border-radius:16px;padding:20px 24px;box-shadow:var(--shadow);overflow:hidden}
+  .masthead::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;
+    background:linear-gradient(180deg,var(--accent),var(--accent-2))}
+  .masthead .row{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+  .masthead h1{margin:0;font-size:22px;font-weight:700;letter-spacing:-.02em}
+  .masthead .sub{color:var(--muted);font-size:13px;margin-top:3px}
+  .badges{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .badge{font-size:11.5px;font-weight:600;color:var(--muted);background:var(--bg);
+    border:1px solid var(--line);border-radius:999px;padding:4px 11px}
+  .badge b{color:var(--ink);font-weight:700}
+  .theme-toggle{border:1px solid var(--line);background:var(--card);color:var(--ink);
+    width:40px;height:40px;border-radius:11px;cursor:pointer;font-size:17px;
+    display:grid;place-items:center;transition:background .15s}
+  .theme-toggle:hover{background:var(--hover)}
+
+  .stickybar{position:sticky;top:0;z-index:50;background:var(--bg);
+    padding:12px 0 8px;margin-top:14px;
+    display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;
+    border-bottom:1px solid var(--line)}
+  nav.tabs{display:flex;gap:4px;flex-wrap:wrap}
+  nav.tabs button{border:1px solid transparent;background:transparent;color:var(--muted);
+    padding:8px 13px;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
+  nav.tabs button:hover{background:var(--hover);color:var(--ink)}
+  nav.tabs button.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .controls{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap}
+  .fgroup{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--muted)}
+  .fgroup label{font-weight:600;color:var(--ink);font-size:12px}
+  input[type=date]{border:1px solid var(--line);border-radius:9px;padding:7px 10px;
+    background:var(--input);color:var(--ink);font-size:13px}
+  .btn{border:1px solid var(--line);background:#fff;border-radius:9px;
+    padding:7px 13px;font-size:13px;cursor:pointer;color:var(--ink)}
+  .btn:hover{border-color:var(--line);background:var(--hover)}
+  .btn.ghost{color:var(--muted)}
+
+  .tabfilters{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0 2px;align-items:flex-end}
+  .tabfilters .fgroup{min-width:200px}
+  .count-badge{font-size:12.5px;color:var(--muted);margin:10px 0 0}
+  .count-badge b{color:var(--ink)}
+
+  /* dropdown multi */
+  .dd{position:relative}
+  .dd-toggle{border:1px solid var(--line);background:var(--input);border-radius:9px;
+    padding:8px 12px;font-size:13px;cursor:pointer;min-width:210px;max-width:340px;width:100%;
+    text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .dd-toggle .caret{float:right;color:var(--muted);margin-left:8px}
+  .dd-panel{position:absolute;top:calc(100% + 6px);left:0;background:var(--card);
+    border:1px solid var(--line);border-radius:12px;box-shadow:0 8px 24px rgba(16,24,40,.16);
+    width:300px;max-height:340px;display:flex;flex-direction:column;z-index:60}
+  .dd-panel.hidden{display:none}
+  .dd-search{border:0;border-bottom:1px solid var(--line);padding:10px 12px;font-size:13px;outline:none}
+  .dd-actions{display:flex;gap:6px;padding:8px 10px;border-bottom:1px solid var(--line)}
+  .dd-actions button{font-size:12px;border:0;background:var(--accent-soft);color:var(--accent);
+    border-radius:6px;padding:4px 9px;cursor:pointer}
+  .dd-list{overflow-y:auto;padding:6px 0}
+  .dd-item{display:flex;align-items:center;gap:8px;padding:7px 12px;cursor:pointer;font-size:13px}
+  .dd-item:hover{background:var(--hover)}
+  .dd-item input{accent-color:var(--accent)}
+  .dd-item .cnt{color:var(--muted);font-size:11px;margin-left:auto}
+
+  section.tab{margin-top:18px}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:18px}
+  .kpi{background:var(--card);border:1px solid var(--line);border-top:3px solid var(--accent);
+    border-radius:var(--radius);padding:15px 15px 13px;box-shadow:var(--shadow)}
+  .kpi .k{font-size:11.5px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.03em}
+  .kpi .v{font-size:29px;font-weight:700;margin-top:5px;letter-spacing:-.02em}
+  .kpi .s{font-size:12px;color:var(--muted);margin-top:4px}
+  .kpi .s b{color:var(--ink)}
+  .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px;vertical-align:1px}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:14px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:16px 16px 12px;box-shadow:var(--shadow)}
+  .card h3{margin:0 0 2px;font-size:14px;font-weight:650;color:var(--heading)}
+  .card .hint{font-size:11.5px;color:var(--muted);margin-bottom:8px}
+  .chart-box{position:relative;height:250px}
+  .chart-box.tall{height:300px}
+  .card.full{grid-column:1 / -1}
+
+  .table-wrap{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:14px 16px 16px;box-shadow:var(--shadow);margin-top:16px}
+  .table-wrap h3{margin:0 0 8px;font-size:14px;font-weight:650;color:var(--heading)}
+  .tsearch{width:100%;max-width:340px;border:1px solid var(--line);border-radius:8px;
+    padding:8px 11px;font-size:13px;margin-bottom:10px;outline:none}
+  .tscroll{overflow:auto;max-height:420px;border:1px solid var(--line);border-radius:10px}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  thead th{position:sticky;top:0;background:var(--thead);text-align:left;font-weight:650;
+    padding:9px 11px;border-bottom:1px solid var(--line);cursor:pointer;white-space:nowrap;user-select:none}
+  thead th:hover{background:var(--thead-hover)}
+  tbody td{padding:8px 11px;border-bottom:1px solid var(--row-border);vertical-align:top}
+  tbody tr:hover{background:var(--row-hover)}
+  .pill{display:inline-block;padding:1px 9px;border-radius:999px;font-size:11.5px;font-weight:600;white-space:nowrap}
+  .pill.green{background:#e6f6ec;color:#15803d}
+  .pill.amber{background:#fdf3dc;color:#b45309}
+  .pill.red{background:#fdeaea;color:#b91c1c}
+  .pill.gray{background:#eef0f3;color:#4b5563}
+  [data-theme="dark"] .pill.green{background:#12301f;color:#4ade80}
+  [data-theme="dark"] .pill.amber{background:#2e2208;color:#fbbf24}
+  [data-theme="dark"] .pill.red{background:#3a1216;color:#f87171}
+  [data-theme="dark"] .pill.gray{background:#243047;color:#9ca3af}
+
+  .findings{margin-top:6px}
+  .finding{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--accent);
+    border-radius:10px;padding:12px 14px;margin-bottom:10px;box-shadow:var(--shadow)}
+  .finding.warn{border-left-color:var(--amber)}
+  .finding.err{border-left-color:var(--red)}
+  .finding .t{font-weight:650;margin-bottom:2px}
+  .finding .d{color:var(--muted);font-size:13px}
+  footer{margin-top:30px;color:var(--muted);font-size:12px;border-top:1px solid var(--line);padding-top:12px}
+  @media (max-width:640px){ .kpis{grid-template-columns:repeat(2,1fr)} .controls{width:100%} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="masthead">
+    <div class="row">
+      <div>
+        <h1>SGTI — Panel de Gestión de TI</h1>
+        <div class="sub">Hospital Regional de Alta Especialidad · Sistema de Gestión de TI</div>
+      </div>
+      <div class="badges">
+        <span class="badge">Exportación <b>2026-09-07</b></span>
+        <span class="badge"><b>43</b> tablas normalizadas</span>
+        <button class="theme-toggle" id="themeToggle" title="Cambiar tema claro/oscuro" aria-label="Cambiar tema">🌙</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="stickybar">
+    <nav class="tabs" id="tabNav"></nav>
+    <div class="controls">
+      <div class="fgroup"><label for="dateFrom">Desde</label><input type="date" id="dateFrom"></div>
+      <div class="fgroup"><label for="dateTo">Hasta</label><input type="date" id="dateTo"></div>
+      <button class="btn ghost" id="resetBtn">Restablecer</button>
+    </div>
+  </div>
+
+  <div class="tabfilters" id="tabFilters"></div>
+
+  <section class="tab" id="tabBody"></section>
+
+  <footer>Generado desde Data/parquet con scripts/build_dashboard.py · Chart.js v4 (local) ·
+    Auditoría detallada en DATA_AUDIT.md · El filtro de fechas aplica a todas las pestañas; cada pestaña tiene sus propios filtros de área/estado.</footer>
+</div>
+
+<script>
+const DATA = {"meta": {"minDate": "2026-01-01", "maxDate": "2026-08-31", "export": "2026-09-07"}, "data": {"oficiosRealizados": [{"fecha": "2026-05-05", "area": "Registro de ejemplo 6", "estado": "Sin entregar", "numero": "EJ-2026-0001", "asunto": "Asunto de ejemplo para el registro de muestra"}, {"fecha": "2026-07-10", "area": "Registro de ejemplo 6", "estado": "Sin entregar", "numero": "EJ-2026-0002", "asunto": "Asunto de ejemplo para el registro de muestra"}, {"fecha": "2026-08-09", "area": "Registro de ejemplo 6", "estado": "Sin entregar", "numero": "EJ-2026-0003", "asunto": "Asunto de ejemplo para el registro de muestra"}, {"fecha": "2026-06-07", "area": "Registro de ejemplo 5", "estado": "Sin entregar", "numero": "EJ-2026-0004", "asunto": "Asunto de ejemplo para el registro de muestra"}, {"fecha": "2026-01-23", "area": "Registro de ejemplo 8", "estado": "Sin entregar", "numero": "EJ-2026-0005", "asunto": "Asunto de ejemplo para el registro de muestra"}, {"fecha": "2026-08-14", "area": "Registro de ejemplo 7", "estado": "Cancelado", "numero": "EJ-2026-0006", "asunto": "Asunto de ejemplo para el registro de muestra"}, {"fecha": "2026-03-15", "area": "Registro de ejemplo 2", "estado": "Sin entregar", "numero": "EJ-2026-0007", "asunto": "Asunto de ejemplo para el registro de muestra"}, {"fecha": "2026-03-23", "area": "Registro de ejemplo 2", "estado": "Sin entregar", "numero": "EJ-2026-0008", "asunto": "Asunto de ejemplo para el registro de muestra"}, {"fecha": "2026-01-17", "area": "Registro de ejemplo 4", "estado": "Sin entregar", "numero": "EJ-2026-0009", "asunto": "Asunto de ejemplo para el registro de muestra"}, {"fecha": "2026-06-04", "area": "Registro de ejemplo 5", "estado": "Sin entregar", "numero": "EJ-2026-0010", "asunto": "Asunto de ejemplo para el registro de muestra"}, {"fecha": "2026-03-30", "area": "Registro de ejemplo 3", "estado": "Sin entregar", "numero": "EJ-2026-0011", "asunto": "Asunto de ejemplo para el registro de muestra"}, {"fecha": "2026-04-27", "area": "Registro de ejemplo 2", "estado": "Entregado", "numero": "EJ-2026-0012", "asunto": "Asunto de ejemplo para el registro de muestra"}, {"fecha": "2026-07-16", "area": "Registro de ejemplo 4", "estado": "Sin entregar", "numero": "EJ-2026-0013", "asunto": "Asunto de ejemplo para el registro de muestra"}, {"fecha": "2026-03-20", "area": "Registro de ejemplo 4", "estado": "Entregado", "numero": "EJ-2026-0014", "asunto": "Asunto de ejemplo para el registro de muestra"}, {"fecha": "2026-05-20", "area": "Registro de ejemplo 8", "estado": "Cancelado", "numero": "EJ-2026-0015", "asunto": "Asunto de ejemplo para el registro de muestra"}, {"fecha": "2026-06-03", "area": "Registro de ejemplo 1", "estado": "Sin entregar", "numero": "EJ-2026-0016", "asunto": "Asunto de ejemplo para el registro de muestra"}, {"fecha": "2026-05-26", "area": "Registro de ejemplo 7", "estado": "Sin entregar", "numero": "EJ-2026-0017", "asunto": "Asunto de ejemplo para el registro de muestra"}, {"fecha": "2026-01-25", "area": "Registro de ejemplo 2", "estado": "Entregado", "numero": "EJ-2026-0018", "asunto": "Asunto de ejemplo para el registro de muestra"}, {"fecha": "2026-03-19", "area": "Registro de ejemplo 7", "estado": "Entregado", "numero": "EJ-2026-0019", "asunto": "Asunto de ejemplo para el registro de muestra"}, {"fecha": "2026-04-30", "area": "Registro de ejemplo 1", "estado": "Entregado", "numero": "EJ-2026-0020", "asunto": "Asunto de ejemplo para el registro de muestra"}, {"fecha": "2026-02-10", "area": "Registro de ejemplo 1", "estado": "Cancelado", "numero": "EJ-2026-0021", "asunto": "Asunto de ejemplo para el registro de muestra"}, {"fecha": "2026-06-11", "area": "Registro de ejemplo 7", "estado": "Sin entregar", "numero": "EJ-2026-0022", "asunto": "Asunto de ejemplo para el registro de muestra"}, {"fecha": "2026-05-22", "area": "Registro de ejemplo 8", "estado": "Sin entregar", "numero": "EJ-2026-0023", "asunto": "Asunto de ejemplo para el registro de muestra"}, {"fecha": "2026-04-21", "area": "Registro de ejemplo 2", "estado": "Sin entregar", "numero": "EJ-2026-0024", "asunto": "Asunto de ejemplo para el registro de muestra"}, {"fecha": "2026-07-10", "area": "Registro de ejemplo 1", "estado": "Sin entregar", "numero": "EJ-2026-0025", "asunto": "Asunto de ejemplo para el registro de muestra"}, {"fecha": "2026-04-16", "area": "Registro de ejemplo 7", "estado": "Sin entregar", "numero": "EJ-2026-0026", "asunto": "Asunto de ejemplo para el registro de muestra"}, {"fecha": "2026-05-04", "area": "Registro de ejemplo 4", "estado": "Sin entregar", "numero": "EJ-2026-0027", "asunto": "Asunto de ejemplo para el registro de muestra"}, {"fecha": "2026-05-06", "area": "Registro de ejemplo 5", "estado": "Cancelado", "numero": "EJ-2026-0028", "asunto": "Asunto de ejemplo para el registro de muestra"}, {"fecha": "2026-08-22", "area": "Registro de ejemplo 6", "estado": "Entregado", "numero": "EJ-2026-0029", "asunto": "Asunto de ejemplo para el registro de muestra"}, {"fecha": "2026-03-30", "area": "Registro de ejemplo 1", "estado": "Cancelado", "numero": "EJ-2026-0030", "asunto": "Asunto de ejemplo para el registro de muestra"}], "oficiosRecibidos": [{"fecha": "2026-08-04", "area": "Registro de ejemplo 4", "estado": "Pendiente", "numero": "EJ-2026-0001", "remitente": "Persona Ejemplo 01", "asunto": "Asunto de ejemplo para el registro de muestra"}, {"fecha": "2026-05-27", "area": "Registro de ejemplo 7", "estado": "Pendiente", "numero": "EJ-2026-0002", "remitente": "Persona Ejemplo 02", "asunto": "Asunto de ejemplo para el registro de muestra"}, {"fecha": "2026-02-25", "area": "Registro de ejemplo 6", "estado": "Pendiente", "numero": "EJ-2026-0003", "remitente": "Persona Ejemplo 03", "asunto": "Asunto de ejemplo para el registro de muestra"}, {"fecha": "2026-08-25", "area": "Registro de ejemplo 4", "estado": "Pendiente", "numero": "EJ-2026-0004", "remitente": "Persona Ejemplo 04", "asunto": "Asunto de ejemplo para el registro de muestra"}, {"fecha": "2026-06-27", "area": "Registro de ejemplo 3", "estado": "Contestado", "numero": "EJ-2026-0005", "remitente": "Persona Ejemplo 05", "asunto": "Asunto de ejemplo para el registro de muestra"}, {"fecha": "2026-07-24", "area": "Registro de ejemplo 2", "estado": "Pendiente", "numero": "EJ-2026-0006", "remitente": "Persona Ejemplo 06", "asunto": "Asunto de ejemplo para el registro de muestra"}, {"fecha": "2026-04-29", "area": "Registro de ejemplo 4", "estado": "Contestado", "numero": "EJ-2026-0007", "remitente": "Persona Ejemplo 07", "asunto": "Asunto de ejemplo para el registro de muestra"}, {"fecha": "2026-01-23", "area": "Registro de ejemplo 6", "estado": "Pendiente", "numero": "EJ-2026-0008", "remitente": "Persona Ejemplo 08", "asunto": "Asunto de ejemplo para el registro de muestra"}, {"fecha": "2026-01-17", "area": "Registro de ejemplo 8", "estado": "Contestado", "numero": "EJ-2026-0009", "remitente": "Persona Ejemplo 09", "asunto": "Asunto de ejemplo para el registro de muestra"}, {"fecha": "2026-07-02", "area": "Registro de ejemplo 2", "estado": "Pendiente", "numero": "EJ-2026-0010", "remitente": "Persona Ejemplo 10", "asunto": "Asunto de ejemplo para el registro de muestra"}, {"fecha": "2026-01-21", "area": "Registro de ejemplo 3", "estado": "Pendiente", "numero": "EJ-2026-0011", "remitente": "Persona Ejemplo 11", "asunto": "Asunto de ejemplo para el registro de muestra"}, {"fecha": "2026-07-14", "area": "Registro de ejemplo 5", "estado": "Pendiente", "numero": "EJ-2026-0012", "remitente": "Persona Ejemplo 12", "asunto": "Asunto de ejemplo para el registro de muestra"}, {"fecha": "2026-08-25", "area": "Registro de ejemplo 3", "estado": "Pendiente", "numero": "EJ-2026-0013", "remitente": "Persona Ejemplo 13", "asunto": "Asunto de ejemplo para el registro de muestra"}, {"fecha": "2026-02-08", "area": "Registro de ejemplo 7", "estado": "Contestado", "numero": "EJ-2026-0014", "remitente": "Persona Ejemplo 14", "asunto": "Asunto de ejemplo para el registro de muestra"}, {"fecha": "2026-02-24", "area": "Registro de ejemplo 4", "estado": "Pendiente", "numero": "EJ-2026-0015", "remitente": "Persona Ejemplo 15", "asunto": "Asunto de ejemplo para el registro de muestra"}, {"fecha": "2026-07-28", "area": "Registro de ejemplo 4", "estado": "Contestado", "numero": "EJ-2026-0016", "remitente": "Persona Ejemplo 16", "asunto": "Asunto de ejemplo para el registro de muestra"}, {"fecha": "2026-06-03", "area": "Registro de ejemplo 4", "estado": "Pendiente", "numero": "EJ-2026-0017", "remitente": "Persona Ejemplo 17", "asunto": "Asunto de ejemplo para el registro de muestra"}, {"fecha": "2026-01-30", "area": "Registro de ejemplo 1", "estado": "Contestado", "numero": "EJ-2026-0018", "remitente": "Persona Ejemplo 18", "asunto": "Asunto de ejemplo para el registro de muestra"}, {"fecha": "2026-06-10", "area": "Registro de ejemplo 3", "estado": "Pendiente", "numero": "EJ-2026-0019", "remitente": "Persona Ejemplo 19", "asunto": "Asunto de ejemplo para el registro de muestra"}, {"fecha": "2026-08-04", "area": "Registro de ejemplo 3", "estado": "Pendiente", "numero": "EJ-2026-0020", "remitente": "Persona Ejemplo 20", "asunto": "Asunto de ejemplo para el registro de muestra"}, {"fecha": "2026-03-07", "area": "Registro de ejemplo 3", "estado": "Pendiente", "numero": "EJ-2026-0021", "remitente": "Persona Ejemplo 21", "asunto": "Asunto de ejemplo para el registro de muestra"}, {"fecha": "2026-01-21", "area": "Registro de ejemplo 5", "estado": "Contestado", "numero": "EJ-2026-0022", "remitente": "Persona Ejemplo 22", "asunto": "Asunto de ejemplo para el registro de muestra"}, {"fecha": "2026-05-06", "area": "Registro de ejemplo 1", "estado": "Pendiente", "numero": "EJ-2026-0023", "remitente": "Persona Ejemplo 23", "asunto": "Asunto de ejemplo para el registro de muestra"}, {"fecha": "2026-06-24", "area": "Registro de ejemplo 1", "estado": "Contestado", "numero": "EJ-2026-0024", "remitente": "Persona Ejemplo 24", "asunto": "Asunto de ejemplo para el registro de muestra"}, {"fecha": "2026-05-02", "area": "Registro de ejemplo 7", "estado": "Pendiente", "numero": "EJ-2026-0025", "remitente": "Persona Ejemplo 25", "asunto": "Asunto de ejemplo para el registro de muestra"}, {"fecha": "2026-06-07", "area": "Registro de ejemplo 7", "estado": "Pendiente", "numero": "EJ-2026-0026", "remitente": "Persona Ejemplo 26", "asunto": "Asunto de ejemplo para el registro de muestra"}, {"fecha": "2026-04-03", "area": "Registro de ejemplo 8", "estado": "Contestado", "numero": "EJ-2026-0027", "remitente": "Persona Ejemplo 27", "asunto": "Asunto de ejemplo para el registro de muestra"}, {"fecha": "2026-08-02", "area": "Registro de ejemplo 4", "estado": "Pendiente", "numero": "EJ-2026-0028", "remitente": "Persona Ejemplo 28", "asunto": "Asunto de ejemplo para el registro de muestra"}, {"fecha": "2026-07-11", "area": "Registro de ejemplo 5", "estado": "Pendiente", "numero": "EJ-2026-0029", "remitente": "Persona Ejemplo 29", "asunto": "Asunto de ejemplo para el registro de muestra"}, {"fecha": "2026-03-08", "area": "Registro de ejemplo 1", "estado": "Pendiente", "numero": "EJ-2026-0030", "remitente": "Persona Ejemplo 30", "asunto": "Asunto de ejemplo para el registro de muestra"}, {"fecha": "2026-03-23", "area": "Registro de ejemplo 4", "estado": "Contestado", "numero": "EJ-2026-0031", "remitente": "Persona Ejemplo 31", "asunto": "Asunto de ejemplo para el registro de muestra"}, {"fecha": "2026-07-04", "area": "Registro de ejemplo 6", "estado": "Contestado", "numero": "EJ-2026-0032", "remitente": "Persona Ejemplo 32", "asunto": "Asunto de ejemplo para el registro de muestra"}, {"fecha": "2026-08-30", "area": "Registro de ejemplo 1", "estado": "Pendiente", "numero": "EJ-2026-0033", "remitente": "Persona Ejemplo 33", "asunto": "Asunto de ejemplo para el registro de muestra"}, {"fecha": "2026-03-23", "area": "Registro de ejemplo 5", "estado": "Pendiente", "numero": "EJ-2026-0034", "remitente": "Persona Ejemplo 34", "asunto": "Asunto de ejemplo para el registro de muestra"}, {"fecha": "2026-03-04", "area": "Registro de ejemplo 3", "estado": "Pendiente", "numero": "EJ-2026-0035", "remitente": "Persona Ejemplo 35", "asunto": "Asunto de ejemplo para el registro de muestra"}, {"fecha": "2026-04-01", "area": "Registro de ejemplo 5", "estado": "Pendiente", "numero": "EJ-2026-0036", "remitente": "Persona Ejemplo 36", "asunto": "Asunto de ejemplo para el registro de muestra"}, {"fecha": "2026-08-19", "area": "Registro de ejemplo 2", "estado": "Contestado", "numero": "EJ-2026-0037", "remitente": "Persona Ejemplo 37", "asunto": "Asunto de ejemplo para el registro de muestra"}, {"fecha": "2026-06-14", "area": "Registro de ejemplo 8", "estado": "Contestado", "numero": "EJ-2026-0038", "remitente": "Persona Ejemplo 38", "asunto": "Asunto de ejemplo para el registro de muestra"}, {"fecha": "2026-01-17", "area": "Registro de ejemplo 6", "estado": "Pendiente", "numero": "EJ-2026-0039", "remitente": "Persona Ejemplo 39", "asunto": "Asunto de ejemplo para el registro de muestra"}, {"fecha": "2026-03-03", "area": "Registro de ejemplo 7", "estado": "Contestado", "numero": "EJ-2026-0040", "remitente": "Persona Ejemplo 40", "asunto": "Asunto de ejemplo para el registro de muestra"}], "notas": [{"fecha": "2026-03-25", "area": "Coordinación de Recursos Humanos", "asunto": "Asunto de ejemplo para el registro de muestra", "autor": ""}, {"fecha": "2026-02-21", "area": "Coordinación de Recursos Humanos", "asunto": "Asunto de ejemplo para el registro de muestra", "autor": "Registro de ejemplo 4"}, {"fecha": "2026-03-11", "area": "Dirección", "asunto": "Asunto de ejemplo para el registro de muestra", "autor": ""}, {"fecha": "2026-04-16", "area": "Coordinación de Informática", "asunto": "Asunto de ejemplo para el registro de muestra", "autor": "Registro de ejemplo 1"}, {"fecha": "2026-06-05", "area": "Dirección", "asunto": "Asunto de ejemplo para el registro de muestra", "autor": ""}, {"fecha": "2026-01-21", "area": "Subdirección Administrativa", "asunto": "Asunto de ejemplo para el registro de muestra", "autor": "Registro de ejemplo 4"}, {"fecha": "2026-06-15", "area": "Subdirección Administrativa", "asunto": "Asunto de ejemplo para el registro de muestra", "autor": "Registro de ejemplo 3"}, {"fecha": "2026-02-07", "area": "Coordinación de Enfermería", "asunto": "Asunto de ejemplo para el registro de muestra", "autor": "Registro de ejemplo 3"}, {"fecha": "2026-07-30", "area": "Coordinación de Enseñanza", "asunto": "Asunto de ejemplo para el registro de muestra", "autor": "Registro de ejemplo 6"}, {"fecha": "2026-07-31", "area": "Dirección", "asunto": "Asunto de ejemplo para el registro de muestra", "autor": "Registro de ejemplo 6"}, {"fecha": "2026-02-11", "area": "Coordinación de Mantenimiento", "asunto": "Asunto de ejemplo para el registro de muestra", "autor": "Registro de ejemplo 1"}, {"fecha": "2026-06-13", "area": "Subdirección Médica", "asunto": "Asunto de ejemplo para el registro de muestra", "autor": "Registro de ejemplo 5"}, {"fecha": "2026-01-25", "area": "Subdirección Administrativa", "asunto": "Asunto de ejemplo para el registro de muestra", "autor": "Registro de ejemplo 3"}, {"fecha": "2026-08-24", "area": "Coordinación de Mantenimiento", "asunto": "Asunto de ejemplo para el registro de muestra", "autor": "Registro de ejemplo 1"}, {"fecha": "2026-05-24", "area": "Coordinación de Enseñanza", "asunto": "Asunto de ejemplo para el registro de muestra", "autor": "Registro de ejemplo 6"}, {"fecha": "2026-03-04", "area": "Dirección", "asunto": "Asunto de ejemplo para el registro de muestra", "autor": "Registro de ejemplo 1"}, {"fecha": "2026-05-27", "area": "Subdirección Administrativa", "asunto": "Asunto de ejemplo para el registro de muestra", "autor": "Registro de ejemplo 6"}, {"fecha": "2026-08-26", "area": "Coordinación de Enseñanza", "asunto": "Asunto de ejemplo para el registro de muestra", "autor": "Registro de ejemplo 6"}, {"fecha": "2026-07-16", "area": "Coordinación de Enfermería", "asunto": "Asunto de ejemplo para el registro de muestra", "autor": "Registro de ejemplo 4"}, {"fecha": "2026-06-10", "area": "Dirección", "asunto": "Asunto de ejemplo para el registro de muestra", "autor": "Registro de ejemplo 3"}, {"fecha": "2026-01-09", "area": "Dirección", "asunto": "Asunto de ejemplo para el registro de muestra", "autor": "Registro de ejemplo 5"}, {"fecha": "2026-06-21", "area": "Coordinación de Recursos Humanos", "asunto": "Asunto de ejemplo para el registro de muestra", "autor": "Registro de ejemplo 3"}, {"fecha": "2026-04-01", "area": "Subdirección Médica", "asunto": "Asunto de ejemplo para el registro de muestra", "autor": "Registro de ejemplo 4"}, {"fecha": "2026-05-04", "area": "Coordinación de Recursos Humanos", "asunto": "Asunto de ejemplo para el registro de muestra", "autor": ""}, {"fecha": "2026-05-02", "area": "Coordinación de Recursos Humanos", "asunto": "Asunto de ejemplo para el registro de muestra", "autor": ""}, {"fecha": "2026-03-18", "area": "Subdirección Administrativa", "asunto": "Asunto de ejemplo para el registro de muestra", "autor": "Registro de ejemplo 5"}, {"fecha": "2026-06-03", "area": "Subdirección Administrativa", "asunto": "Asunto de ejemplo para el registro de muestra", "autor": "Registro de ejemplo 3"}, {"fecha": "2026-08-30", "area": "Coordinación de Enseñanza", "asunto": "Asunto de ejemplo para el registro de muestra", "autor": "Registro de ejemplo 3"}, {"fecha": "2026-05-28", "area": "Coordinación de Informática", "asunto": "Asunto de ejemplo para el registro de muestra", "autor": "Registro de ejemplo 5"}, {"fecha": "2026-05-17", "area": "Dirección", "asunto": "Asunto de ejemplo para el registro de muestra", "autor": "Registro de ejemplo 1"}], "cuentas": [{"fecha": "2026-07-17", "area": "Registro de ejemplo 6", "estado": "Entregada", "persona": "Persona Ejemplo 01", "username": "usuario.ejemplo1"}, {"fecha": "2026-05-07", "area": "Registro de ejemplo 8", "estado": "Negativa", "persona": "Persona Ejemplo 02", "username": "usuario.ejemplo2"}, {"fecha": "2026-08-12", "area": "Registro de ejemplo 2", "estado": "Entregada", "persona": "Persona Ejemplo 03", "username": "usuario.ejemplo3"}, {"fecha": "2026-01-22", "area": "Registro de ejemplo 7", "estado": "Entregada", "persona": "Persona Ejemplo 04", "username": "usuario.ejemplo4"}, {"fecha": "2026-03-26", "area": "Registro de ejemplo 4", "estado": "Negativa", "persona": "Persona Ejemplo 05", "username": "usuario.ejemplo5"}, {"fecha": "2026-06-12", "area": "Registro de ejemplo 3", "estado": "Entregada", "persona": "Persona Ejemplo 06", "username": "usuario.ejemplo6"}, {"fecha": "2026-06-01", "area": "Registro de ejemplo 4", "estado": "Pendiente", "persona": "Persona Ejemplo 07", "username": "usuario.ejemplo7"}, {"fecha": "2026-06-01", "area": "Registro de ejemplo 5", "estado": "Entregada", "persona": "Persona Ejemplo 08", "username": "usuario.ejemplo8"}, {"fecha": "2026-04-01", "area": "Registro de ejemplo 2", "estado": "Entregada", "persona": "Persona Ejemplo 09", "username": "usuario.ejemplo9"}, {"fecha": "2026-03-21", "area": "Registro de ejemplo 6", "estado": "Entregada", "persona": "Persona Ejemplo 10", "username": "usuario.ejemplo10"}, {"fecha": "2026-08-08", "area": "Registro de ejemplo 4", "estado": "Pendiente", "persona": "Persona Ejemplo 11", "username": "usuario.ejemplo11"}, {"fecha": "2026-07-04", "area": "Registro de ejemplo 4", "estado": "Negativa", "persona": "Persona Ejemplo 12", "username": "usuario.ejemplo12"}, {"fecha": "2026-03-24", "area": "Registro de ejemplo 4", "estado": "Entregada", "persona": "Persona Ejemplo 13", "username": "usuario.ejemplo13"}, {"fecha": "2026-04-12", "area": "Registro de ejemplo 8", "estado": "Entregada", "persona": "Persona Ejemplo 14", "username": "usuario.ejemplo14"}, {"fecha": "2026-04-13", "area": "Registro de ejemplo 6", "estado": "Negativa", "persona": "Persona Ejemplo 15", "username": "usuario.ejemplo15"}, {"fecha": "2026-02-04", "area": "Registro de ejemplo 8", "estado": "Pendiente", "persona": "Persona Ejemplo 16", "username": "usuario.ejemplo16"}, {"fecha": "2026-02-04", "area": "Registro de ejemplo 2", "estado": "Pendiente", "persona": "Persona Ejemplo 17", "username": "usuario.ejemplo17"}, {"fecha": "2026-05-07", "area": "Registro de ejemplo 5", "estado": "Entregada", "persona": "Persona Ejemplo 18", "username": "usuario.ejemplo18"}, {"fecha": "2026-01-22", "area": "Registro de ejemplo 3", "estado": "Entregada", "persona": "Persona Ejemplo 19", "username": "usuario.ejemplo19"}, {"fecha": "2026-03-03", "area": "Registro de ejemplo 6", "estado": "Entregada", "persona": "Persona Ejemplo 20", "username": "usuario.ejemplo20"}, {"fecha": "2026-08-16", "area": "Registro de ejemplo 5", "estado": "Pendiente", "persona": "Persona Ejemplo 21", "username": "usuario.ejemplo21"}, {"fecha": "2026-04-02", "area": "Registro de ejemplo 7", "estado": "Entregada", "persona": "Persona Ejemplo 22", "username": "usuario.ejemplo22"}, {"fecha": "2026-08-24", "area": "Registro de ejemplo 6", "estado": "Pendiente", "persona": "Persona Ejemplo 23", "username": "usuario.ejemplo23"}, {"fecha": "2026-04-28", "area": "Registro de ejemplo 3", "estado": "Pendiente", "persona": "Persona Ejemplo 24", "username": "usuario.ejemplo24"}, {"fecha": "2026-08-21", "area": "Registro de ejemplo 1", "estado": "Entregada", "persona": "Persona Ejemplo 25", "username": "usuario.ejemplo25"}, {"fecha": "2026-07-07", "area": "Registro de ejemplo 5", "estado": "Pendiente", "persona": "Persona Ejemplo 26", "username": "usuario.ejemplo26"}, {"fecha": "2026-06-20", "area": "Registro de ejemplo 7", "estado": "Entregada", "persona": "Persona Ejemplo 27", "username": "usuario.ejemplo27"}, {"fecha": "2026-01-07", "area": "Registro de ejemplo 6", "estado": "Entregada", "persona": "Persona Ejemplo 28", "username": "usuario.ejemplo28"}, {"fecha": "2026-07-15", "area": "Registro de ejemplo 2", "estado": "Pendiente", "persona": "Persona Ejemplo 29", "username": "usuario.ejemplo29"}, {"fecha": "2026-07-16", "area": "Registro de ejemplo 5", "estado": "Entregada", "persona": "Persona Ejemplo 30", "username": "usuario.ejemplo30"}, {"fecha": "2026-04-03", "area": "Registro de ejemplo 7", "estado": "Pendiente", "persona": "Persona Ejemplo 31", "username": "usuario.ejemplo31"}, {"fecha": "2026-02-24", "area": "Registro de ejemplo 4", "estado": "Pendiente", "persona": "Persona Ejemplo 32", "username": "usuario.ejemplo32"}, {"fecha": "2026-02-23", "area": "Registro de ejemplo 5", "estado": "Pendiente", "persona": "Persona Ejemplo 33", "username": "usuario.ejemplo33"}, {"fecha": "2026-06-09", "area": "Registro de ejemplo 5", "estado": "Entregada", "persona": "Persona Ejemplo 34", "username": "usuario.ejemplo34"}, {"fecha": "2026-06-16", "area": "Registro de ejemplo 8", "estado": "Entregada", "persona": "Persona Ejemplo 35", "username": "usuario.ejemplo35"}, {"fecha": "2026-02-05", "area": "Registro de ejemplo 3", "estado": "Negativa", "persona": "Persona Ejemplo 36", "username": "usuario.ejemplo36"}, {"fecha": "2026-06-26", "area": "Registro de ejemplo 5", "estado": "Entregada", "persona": "Persona Ejemplo 37", "username": "usuario.ejemplo37"}, {"fecha": "2026-01-08", "area": "Registro de ejemplo 1", "estado": "Negativa", "persona": "Persona Ejemplo 38", "username": "usuario.ejemplo38"}, {"fecha": "2026-04-06", "area": "Registro de ejemplo 1", "estado": "Negativa", "persona": "Persona Ejemplo 39", "username": "usuario.ejemplo39"}, {"fecha": "2026-01-15", "area": "Registro de ejemplo 1", "estado": "Pendiente", "persona": "Persona Ejemplo 40", "username": "usuario.ejemplo40"}], "entregas": [{"fecha": "2026-01-27", "area": "Coordinación de Recursos Humanos", "tipo": "Tóner", "cantidad": 20, "marca": "Marca de ejemplo"}, {"fecha": "2026-01-28", "area": "Coordinación de Informática", "tipo": "Papel", "cantidad": 16, "marca": "Marca de ejemplo"}, {"fecha": "2026-07-14", "area": "Subdirección Médica", "tipo": "Papel", "cantidad": 2, "marca": "Marca de ejemplo"}, {"fecha": "2026-04-02", "area": "Subdirección Administrativa", "tipo": "Tóner", "cantidad": 1, "marca": "Marca de ejemplo"}, {"fecha": "2026-06-25", "area": "Coordinación de Mantenimiento", "tipo": "Papel", "cantidad": 3, "marca": "Marca de ejemplo"}, {"fecha": "2026-05-25", "area": "Coordinación de Enseñanza", "tipo": "Papel", "cantidad": 10, "marca": "Marca de ejemplo"}, {"fecha": "2026-08-20", "area": "Dirección", "tipo": "Papel", "cantidad": 15, "marca": "Marca de ejemplo"}, {"fecha": "2026-06-12", "area": "Coordinación de Enseñanza", "tipo": "Papel", "cantidad": 18, "marca": "Marca de ejemplo"}, {"fecha": "2026-05-09", "area": "Coordinación de Mantenimiento", "tipo": "Papel", "cantidad": 11, "marca": "Marca de ejemplo"}, {"fecha": "2026-06-05", "area": "Coordinación de Mantenimiento", "tipo": "Papel", "cantidad": 15, "marca": "Marca de ejemplo"}, {"fecha": "2026-01-16", "area": "Dirección", "tipo": "Papel", "cantidad": 12, "marca": "Marca de ejemplo"}, {"fecha": "2026-06-25", "area": "Dirección", "tipo": "Tóner", "cantidad": 16, "marca": "Marca de ejemplo"}, {"fecha": "2026-08-18", "area": "Subdirección Médica", "tipo": "Papel", "cantidad": 11, "marca": "Marca de ejemplo"}, {"fecha": "2026-05-25", "area": "Dirección", "tipo": "Tóner", "cantidad": 17, "marca": "Marca de ejemplo"}, {"fecha": "2026-08-09", "area": "Coordinación de Enseñanza", "tipo": "Tóner", "cantidad": 7, "marca": "Marca de ejemplo"}, {"fecha": "2026-08-29", "area": "Coordinación de Enseñanza", "tipo": "Papel", "cantidad": 14, "marca": "Marca de ejemplo"}, {"fecha": "2026-08-02", "area": "Coordinación de Recursos Humanos", "tipo": "Papel", "cantidad": 2, "marca": "Marca de ejemplo"}, {"fecha": "2026-02-09", "area": "Coordinación de Enfermería", "tipo": "Papel", "cantidad": 16, "marca": "Marca de ejemplo"}, {"fecha": "2026-07-09", "area": "Coordinación de Informática", "tipo": "Tóner", "cantidad": 2, "marca": "Marca de ejemplo"}, {"fecha": "2026-04-21", "area": "Subdirección Médica", "tipo": "Tóner", "cantidad": 8, "marca": "Marca de ejemplo"}], "ingresos": [{"fecha": "2026-01-18", "tipo": "Tóner", "cantidad": 12, "monto": 652.85, "contrato": "EJ-2026-0001"}, {"fecha": "2026-05-24", "tipo": "Papel", "cantidad": 16, "monto": 4209.18, "contrato": "EJ-2026-0002"}, {"fecha": "2026-05-14", "tipo": "Tóner", "cantidad": 1, "monto": 1686.14, "contrato": "EJ-2026-0003"}, {"fecha": "2026-06-09", "tipo": "Papel", "cantidad": 11, "monto": 3409.65, "contrato": "EJ-2026-0004"}, {"fecha": "2026-08-08", "tipo": "Tóner", "cantidad": 18, "monto": 4960.45, "contrato": "EJ-2026-0005"}, {"fecha": "2026-01-02", "tipo": "Tóner", "cantidad": 8, "monto": 4576.4, "contrato": "EJ-2026-0006"}, {"fecha": "2026-08-04", "tipo": "Tóner", "cantidad": 12, "monto": 4793.59, "contrato": "EJ-2026-0007"}, {"fecha": "2026-03-10", "tipo": "Tóner", "cantidad": 6, "monto": 850.46, "contrato": "EJ-2026-0008"}, {"fecha": "2026-03-20", "tipo": "Papel", "cantidad": 10, "monto": 3040.29, "contrato": "EJ-2026-0009"}, {"fecha": "2026-02-08", "tipo": "Papel", "cantidad": 14, "monto": 985.24, "contrato": "EJ-2026-0010"}], "reubicaciones": [{"fecha": "2026-08-25", "area": "Registro de ejemplo 4", "tipo": "Cómputo", "equipo": "EQ-DEMO-0001", "origen": "Subdirección Médica"}, {"fecha": "2026-08-28", "area": "Registro de ejemplo 3", "tipo": "Impresión", "equipo": "EQ-DEMO-0002", "origen": "Coordinación de Informática"}, {"fecha": "2026-02-27", "area": "Registro de ejemplo 1", "tipo": "Telefonía", "equipo": "EQ-DEMO-0003", "origen": "Coordinación de Enfermería"}, {"fecha": "2026-01-17", "area": "Registro de ejemplo 4", "tipo": "Cómputo", "equipo": "EQ-DEMO-0004", "origen": "Coordinación de Recursos Humanos"}, {"fecha": "2026-08-31", "area": "Registro de ejemplo 7", "tipo": "Impresión", "equipo": "EQ-DEMO-0005", "origen": "Coordinación de Informática"}, {"fecha": "2026-07-01", "area": "Registro de ejemplo 7", "tipo": "Telefonía", "equipo": "EQ-DEMO-0006", "origen": "Coordinación de Enfermería"}, {"fecha": "2026-07-26", "area": "Registro de ejemplo 3", "tipo": "Cómputo", "equipo": "EQ-DEMO-0007", "origen": "Coordinación de Informática"}, {"fecha": "2026-01-22", "area": "Registro de ejemplo 3", "tipo": "Impresión", "equipo": "EQ-DEMO-0008", "origen": "Subdirección Administrativa"}, {"fecha": "2026-01-26", "area": "Registro de ejemplo 4", "tipo": "Telefonía", "equipo": "EQ-DEMO-0009", "origen": "Coordinación de Informática"}, {"fecha": "2026-01-04", "area": "Registro de ejemplo 5", "tipo": "Cómputo", "equipo": "EQ-DEMO-0010", "origen": "Coordinación de Mantenimiento"}, {"fecha": "2026-05-25", "area": "Registro de ejemplo 3", "tipo": "Impresión", "equipo": "EQ-DEMO-0011", "origen": "Coordinación de Informática"}, {"fecha": "2026-03-08", "area": "Registro de ejemplo 7", "tipo": "Telefonía", "equipo": "EQ-DEMO-0012", "origen": "Coordinación de Informática"}, {"fecha": "2026-01-12", "area": "Registro de ejemplo 7", "tipo": "Cómputo", "equipo": "EQ-DEMO-0013", "origen": "Dirección"}, {"fecha": "2026-03-13", "area": "Registro de ejemplo 8", "tipo": "Impresión", "equipo": "EQ-DEMO-0014", "origen": "Coordinación de Mantenimiento"}, {"fecha": "2026-03-04", "area": "Registro de ejemplo 5", "tipo": "Telefonía", "equipo": "EQ-DEMO-0015", "origen": "Coordinación de Enfermería"}], "licencias": [{"fecha": "2026-07-24", "area": "Registro de ejemplo 1", "ap": "Microsoft Office", "hostname": "EQ-DEMO-0001", "persona": "Persona Ejemplo 01"}, {"fecha": "2026-05-23", "area": "Registro de ejemplo 1", "ap": "Adobe Acrobat Pro", "hostname": "EQ-DEMO-0002", "persona": "Persona Ejemplo 02"}, {"fecha": "2026-03-22", "area": "Registro de ejemplo 3", "ap": "Google Workspace", "hostname": "EQ-DEMO-0003", "persona": "Persona Ejemplo 03"}, {"fecha": "2026-01-31", "area": "Registro de ejemplo 5", "ap": "Microsoft Office", "hostname": "EQ-DEMO-0004", "persona": "Persona Ejemplo 04"}, {"fecha": "2026-04-27", "area": "Registro de ejemplo 6", "ap": "Adobe Acrobat Pro", "hostname": "EQ-DEMO-0005", "persona": "Persona Ejemplo 05"}, {"fecha": "2026-04-02", "area": "Registro de ejemplo 2", "ap": "Google Workspace", "hostname": "EQ-DEMO-0006", "persona": "Persona Ejemplo 06"}, {"fecha": "2026-01-27", "area": "Registro de ejemplo 1", "ap": "Microsoft Office", "hostname": "EQ-DEMO-0007", "persona": "Persona Ejemplo 07"}, {"fecha": "2026-04-13", "area": "Registro de ejemplo 5", "ap": "Adobe Acrobat Pro", "hostname": "EQ-DEMO-0008", "persona": "Persona Ejemplo 08"}, {"fecha": "2026-04-20", "area": "Registro de ejemplo 6", "ap": "Google Workspace", "hostname": "EQ-DEMO-0009", "persona": "Persona Ejemplo 09"}, {"fecha": "2026-01-15", "area": "Registro de ejemplo 6", "ap": "Microsoft Office", "hostname": "EQ-DEMO-0010", "persona": "Persona Ejemplo 10"}, {"fecha": "2026-03-29", "area": "Registro de ejemplo 6", "ap": "Adobe Acrobat Pro", "hostname": "EQ-DEMO-0011", "persona": "Persona Ejemplo 11"}, {"fecha": "2026-02-26", "area": "Registro de ejemplo 8", "ap": "Google Workspace", "hostname": "EQ-DEMO-0012", "persona": "Persona Ejemplo 12"}, {"fecha": "2026-03-22", "area": "Registro de ejemplo 2", "ap": "Microsoft Office", "hostname": "EQ-DEMO-0013", "persona": "Persona Ejemplo 13"}, {"fecha": "2026-04-01", "area": "Registro de ejemplo 4", "ap": "Adobe Acrobat Pro", "hostname": "EQ-DEMO-0014", "persona": "Persona Ejemplo 14"}, {"fecha": "2026-01-16", "area": "Registro de ejemplo 5", "ap": "Google Workspace", "hostname": "EQ-DEMO-0015", "persona": "Persona Ejemplo 15"}], "vacaciones": [{"fecha": "2026-01-11", "tipo": "Vacaciones", "estado": "Pendiente", "persona": "Registro de ejemplo 4"}, {"fecha": "2026-04-22", "tipo": "Vacaciones", "estado": "Entregado", "persona": ""}, {"fecha": "2026-08-23", "tipo": "Vacaciones", "estado": "Entregado", "persona": "Registro de ejemplo 1"}, {"fecha": "2026-06-04", "tipo": "Vacaciones", "estado": "Entregado", "persona": ""}, {"fecha": "2026-08-08", "tipo": "Incidencia", "estado": "Pendiente", "persona": "Registro de ejemplo 6"}, {"fecha": "2026-07-21", "tipo": "Incidencia", "estado": "Pendiente", "persona": "Registro de ejemplo 6"}, {"fecha": "2026-03-23", "tipo": "Vacaciones", "estado": "Pendiente", "persona": ""}, {"fecha": "2026-06-13", "tipo": "Vacaciones", "estado": "Entregado", "persona": ""}, {"fecha": "2026-01-27", "tipo": "Vacaciones", "estado": "Pendiente", "persona": "Registro de ejemplo 6"}, {"fecha": "2026-05-11", "tipo": "Vacaciones", "estado": "Entregado", "persona": "Registro de ejemplo 3"}], "audit": [{"fecha": "2026-02-14", "accion": "CREAR", "modulo": "oficios-recibidos"}, {"fecha": "2026-08-14", "accion": "ACTUALIZAR", "modulo": "oficios-realizados"}, {"fecha": "2026-08-03", "accion": "ELIMINAR", "modulo": "notas"}, {"fecha": "2026-01-30", "accion": "CREAR", "modulo": "cuentas"}, {"fecha": "2026-07-12", "accion": "ACTUALIZAR", "modulo": "suministro-toners-hojas"}, {"fecha": "2026-08-08", "accion": "ELIMINAR", "modulo": "historico-reubicaciones"}, {"fecha": "2026-07-31", "accion": "CREAR", "modulo": "licenciamientos"}, {"fecha": "2026-01-01", "accion": "ACTUALIZAR", "modulo": "oficios-recibidos"}, {"fecha": "2026-08-09", "accion": "ELIMINAR", "modulo": "oficios-realizados"}, {"fecha": "2026-06-06", "accion": "CREAR", "modulo": "notas"}, {"fecha": "2026-05-25", "accion": "ACTUALIZAR", "modulo": "cuentas"}, {"fecha": "2026-07-19", "accion": "ELIMINAR", "modulo": "suministro-toners-hojas"}, {"fecha": "2026-05-05", "accion": "CREAR", "modulo": "historico-reubicaciones"}, {"fecha": "2026-01-13", "accion": "ACTUALIZAR", "modulo": "licenciamientos"}, {"fecha": "2026-03-09", "accion": "ELIMINAR", "modulo": "oficios-recibidos"}, {"fecha": "2026-04-07", "accion": "CREAR", "modulo": "oficios-realizados"}, {"fecha": "2026-03-10", "accion": "ACTUALIZAR", "modulo": "notas"}, {"fecha": "2026-08-24", "accion": "ELIMINAR", "modulo": "cuentas"}, {"fecha": "2026-02-20", "accion": "CREAR", "modulo": "suministro-toners-hojas"}, {"fecha": "2026-06-02", "accion": "ACTUALIZAR", "modulo": "historico-reubicaciones"}, {"fecha": "2026-08-04", "accion": "ELIMINAR", "modulo": "licenciamientos"}, {"fecha": "2026-06-24", "accion": "CREAR", "modulo": "oficios-recibidos"}, {"fecha": "2026-05-24", "accion": "ACTUALIZAR", "modulo": "oficios-realizados"}, {"fecha": "2026-04-13", "accion": "ELIMINAR", "modulo": "notas"}, {"fecha": "2026-04-15", "accion": "CREAR", "modulo": "cuentas"}, {"fecha": "2026-08-12", "accion": "ACTUALIZAR", "modulo": "suministro-toners-hojas"}, {"fecha": "2026-01-19", "accion": "ELIMINAR", "modulo": "historico-reubicaciones"}, {"fecha": "2026-03-27", "accion": "CREAR", "modulo": "licenciamientos"}, {"fecha": "2026-06-23", "accion": "ACTUALIZAR", "modulo": "oficios-recibidos"}, {"fecha": "2026-07-27", "accion": "ELIMINAR", "modulo": "oficios-realizados"}]}};
+
+const PALETTE = ["#2563eb","#16a34a","#d97706","#dc2626","#7c3aed","#0d9488","#db2777","#64748b","#f59e0b","#0891b2"];
+const C = {green:"#16a34a", amber:"#d97706", red:"#dc2626", gray:"#64748b", blue:"#2563eb", purple:"#7c3aed", teal:"#0d9488", pink:"#db2777"};
+
+let THEME = (() => {
+  const s = localStorage.getItem("sgti-theme");
+  if(s === "light" || s === "dark") return s;
+  return (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) ? "dark" : "light";
+})();
+
+Chart.defaults.font.family = getComputedStyle(document.body).fontFamily;
+Chart.defaults.plugins.tooltip.padding = 10;
+Chart.defaults.plugins.tooltip.cornerRadius = 8;
+
+function gridColor(){ return THEME === "dark" ? "#2a3648" : "#eef0f3"; }
+function cardBg(){ return THEME === "dark" ? "#141d2e" : "#ffffff"; }
+function applyTheme(t, rerender){
+  THEME = t;
+  document.documentElement.setAttribute("data-theme", t);
+  localStorage.setItem("sgti-theme", t);
+  Chart.defaults.color = t === "dark" ? "#94a3b8" : "#667085";
+  Chart.defaults.plugins.tooltip.backgroundColor = t === "dark" ? "#1e293b" : "#1c2430";
+  const tg = document.getElementById("themeToggle");
+  if(tg) tg.textContent = t === "dark" ? "☀️" : "🌙";
+  if(rerender) refresh();
+}
+
+const state = { from: DATA.meta.minDate, to: DATA.meta.maxDate };
+const fstate = {};   // filterKey -> Set
+let currentTabId = "resumen";
+
+// ---------------- pestañas ----------------
+const TABS = [
+  {id:"resumen", label:"Resumen", ds:[], filters:[]},
+  {id:"or", label:"Oficios realizados", ds:["oficiosRealizados"],
+    filters:[{key:"area",label:"Área / Destino",ds:["oficiosRealizados"]},
+             {key:"estado",label:"Estado",ds:["oficiosRealizados"]}]},
+  {id:"rr", label:"Oficios recibidos", ds:["oficiosRecibidos"],
+    filters:[{key:"area",label:"Área / Remitente",ds:["oficiosRecibidos"]},
+             {key:"estado",label:"Estado",ds:["oficiosRecibidos"]}]},
+  {id:"nt", label:"Notas informativas", ds:["notas"],
+    filters:[{key:"area",label:"Área (TI)",ds:["notas"]}]},
+  {id:"cu", label:"Cuentas de usuario", ds:["cuentas"],
+    filters:[{key:"area",label:"Coordinación",ds:["cuentas"]},
+             {key:"estado",label:"Estatus",ds:["cuentas"]}]},
+  {id:"en", label:"Suministros", ds:["entregas","ingresos"],
+    filters:[{key:"tipo",label:"Tipo",ds:["entregas","ingresos"]},
+             {key:"area",label:"Área",ds:["entregas"]}]},
+  {id:"op", label:"Operaciones", ds:["reubicaciones","licencias","vacaciones","audit"], filters:[]},
+  {id:"hallazgos", label:"Hallazgos", ds:[], filters:[]},
+];
+const TAB_BY_ID = Object.fromEntries(TABS.map(t=>[t.id,t]));
+const RENDERERS = {
+  resumen: renderResumen, or: renderOR, rr: renderRR, nt: renderNT,
+  cu: renderCU, en: renderEN, op: renderOP, hallazgos: renderHallazgos
+};
+
+// ---------------- utilidades ----------------
+function monthOf(d){ return d ? d.slice(0,7) : ""; }
+function dateOk(d){ return !d || (d >= state.from && d <= state.to); }
+function filterRows(dsKey){
+  let rows = DATA.data[dsKey].filter(r => dateOk(r.fecha));
+  const tab = TAB_BY_ID[currentTabId];
+  tab.filters.forEach(f => {
+    if(!f.ds.includes(dsKey)) return;
+    const sel = fstate[f.key];
+    if(sel && sel.size) rows = rows.filter(r => sel.has(r[f.key] || "Sin dato"));
+  });
+  return rows;
+}
+function monthsBetween(m0, m1){
+  const out=[]; let y=+m0.slice(0,4), m=+m0.slice(5,7); const y1=+m1.slice(0,4), mo1=+m1.slice(5,7);
+  while(y<y1 || (y===y1 && m<=mo1)){ out.push(y+"-"+String(m).padStart(2,"0")); m++; if(m>12){m=1;y++;} }
+  return out;
+}
+function axisMonths(rows){
+  const ms = rows.map(r=>monthOf(r.fecha)).filter(Boolean).sort();
+  if(!ms.length) return [];
+  return monthsBetween(ms[0], ms[ms.length-1]);
+}
+function monthCounts(rows, axis){
+  const m={}; rows.forEach(r=>{const k=monthOf(r.fecha); if(k) m[k]=(m[k]||0)+1;});
+  return axis.map(a=>m[a]||0);
+}
+function countBy(rows, keyFn){ const m={}; rows.forEach(r=>{const k=keyFn(r); m[k]=(m[k]||0)+1;}); return m; }
+function topN(map, n){
+  const e = Object.entries(map).sort((a,b)=>b[1]-a[1]);
+  if(e.length<=n) return {labels:e.map(x=>x[0]), values:e.map(x=>x[1])};
+  const head=e.slice(0,n-1); const rest=e.slice(n-1).reduce((s,x)=>s+x[1],0);
+  return {labels:[...head.map(x=>x[0]),"Otros"], values:[...head.map(x=>x[1]), rest]};
+}
+function esc(s){ return String(s).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+function pillFor(status){
+  const map={"Entregado":"green","Contestado":"green","Aprobada":"green","Entregada":"green",
+    "Sin entregar":"amber","Pendiente":"amber","Cancelado":"red","Negativa":"red","Otro":"gray"};
+  return map[status]||"gray";
+}
+
+// ---------------- gráficas ----------------
+const charts = {};
+function makeChart(id, cfg){
+  if(charts[id]) charts[id].destroy();
+  const el = document.getElementById(id); if(!el) return;
+  charts[id] = new Chart(el, cfg);
+}
+function destroyCharts(){ Object.values(charts).forEach(c=>c.destroy()); for(const k in charts) delete charts[k]; }
+function mkDoughnut(labels, values, colors){
+  return {type:"doughnut", data:{labels, datasets:[{data:values, backgroundColor:colors,
+    borderColor:cardBg(), borderWidth:2, hoverOffset:6}]},
+    options:{maintainAspectRatio:false, cutout:"62%",
+      plugins:{legend:{position:"bottom", labels:{boxWidth:12, boxHeight:12, padding:12, font:{size:11}}}}}};
+}
+function mkHBar(labels, values, color){
+  return {type:"bar", data:{labels, datasets:[{data:values, backgroundColor:color, borderRadius:5, barThickness:16}]},
+    options:{indexAxis:"y", maintainAspectRatio:false, plugins:{legend:{display:false}},
+      scales:{x:{grid:{color:gridColor()}, beginAtZero:true, ticks:{precision:0}}, y:{grid:{display:false}}}}};
+}
+function mkBar(labels, datasets){
+  return {type:"bar", data:{labels, datasets}, options:{maintainAspectRatio:false,
+    plugins:{legend:{position:"bottom", labels:{boxWidth:12, boxHeight:12, font:{size:11}}}},
+    scales:{x:{grid:{display:false}}, y:{beginAtZero:true, grid:{color:gridColor()}, ticks:{precision:0}}}}};
+}
+function mkLine(labels, values, color, fill){
+  return {type:"line", data:{labels, datasets:[{data:values, borderColor:color,
+    backgroundColor: fill ? color+"22":"transparent", fill: fill||false, tension:.32,
+    pointRadius:2.5, pointBackgroundColor:color, borderWidth:2.2}]},
+    options:{maintainAspectRatio:false, plugins:{legend:{display:false}},
+      scales:{y:{beginAtZero:true, grid:{color:gridColor()}, ticks:{precision:0}}, x:{grid:{display:false}}}}};
+}
+function estadoColors(labels){
+  const map={"Entregado":C.green,"Contestado":C.green,"Aprobada":C.green,"Entregada":C.green,
+    "Sin entregar":C.amber,"Pendiente":C.amber,"Cancelado":C.red,"Negativa":C.red,"Otro":C.gray};
+  return labels.map(l=>map[l]||PALETTE[labels.indexOf(l)%PALETTE.length]);
+}
+
+// ---------------- KPIs ----------------
+const KPI_DEFS = [
+  {label:"Oficios realizados", big:()=>filterRows("oficiosRealizados").length,
+    sub:()=>{const r=filterRows("oficiosRealizados"); const e=r.filter(x=>x.estado==="Entregado").length;
+      return `<span class="dot" style="background:${C.green}"></span>${e} entregados · <span class="dot" style="background:${C.amber}"></span>${r.length-e} sin entregar`;}},
+  {label:"Oficios recibidos", big:()=>filterRows("oficiosRecibidos").length,
+    sub:()=>{const r=filterRows("oficiosRecibidos"); const c=r.filter(x=>x.estado==="Contestado").length;
+      return `<span class="dot" style="background:${C.green}"></span>${c} contestados · <span class="dot" style="background:${C.amber}"></span>${r.length-c} pendientes`;}},
+  {label:"Notas informativas", big:()=>filterRows("notas").length, sub:()=>"reportes de actividad"},
+  {label:"Cuentas de usuario", big:()=>filterRows("cuentas").length,
+    sub:()=>{const r=filterRows("cuentas"); const e=r.filter(x=>x.estado==="Entregada").length; const p=r.filter(x=>x.estado==="Pendiente").length;
+      return `<span class="dot" style="background:${C.green}"></span>${e} entregadas · <span class="dot" style="background:${C.amber}"></span>${p} pendientes`;}},
+  {label:"Entregas de suministro", big:()=>filterRows("entregas").length,
+    sub:()=>{const r=filterRows("entregas"); const t=r.filter(x=>x.tipo==="Tóner").length;
+      return `<span class="dot" style="background:${C.teal}"></span>${t} tóner · <span class="dot" style="background:${C.purple}"></span>${r.length-t} papel`;}},
+  {label:"Equipos reubicados", big:()=>filterRows("reubicaciones").length, sub:()=>"movimientos de equipo"},
+];
+function renderKPIs(){
+  return `<div class="kpis">` + KPI_DEFS.map(d=>`
+    <div class="kpi"><div class="k">${d.label}</div><div class="v">${d.big()}</div><div class="s">${d.sub()}</div></div>`).join("") + `</div>`;
+}
+
+// ---------------- tabla de drill-down ----------------
+function renderTable(containerId, dsKey, cols, title){
+  const rows = filterRows(dsKey);
+  const el = document.getElementById(containerId);
+  el.innerHTML = `<h3>${title} <span class="count-badge">— <b>${rows.length}</b> registros</span></h3>
+    <input class="tsearch" placeholder="Buscar en estos registros…">
+    <div class="tscroll"><table><thead>${cols.map(c=>`<th data-k="${c.key}" data-t="${c.type||'s'}">${c.label}</th>`).join("")}</thead>
+    <tbody>${rows.slice(0,200).map(r=>`<tr>${cols.map(c=>cellHtml(r[c.key], c)).join("")}</tr>`).join("")}</tbody></table></div>
+    ${rows.length>200?`<div class="count-badge">Mostrando los primeros 200 de ${rows.length} registros.</div>`:""}`;
+  const tbody = el.querySelector("tbody");
+  const search = el.querySelector(".tsearch");
+  search.addEventListener("input", ()=>{ const q=search.value.toLowerCase();
+    Array.from(tbody.querySelectorAll("tr")).forEach(tr=>{ tr.style.display = tr.textContent.toLowerCase().includes(q) ? "" : "none"; }); });
+  el.querySelectorAll("thead th").forEach(th=>{
+    th.addEventListener("click", ()=>{
+      const key=th.dataset.k, typ=th.dataset.t, dir=th.dataset.dir==="asc"?"desc":"asc";
+      el.querySelectorAll("thead th").forEach(x=>delete x.dataset.dir); th.dataset.dir=dir;
+      const arr=Array.from(tbody.querySelectorAll("tr")).sort((a,b)=>{
+        const va=rowVal(a,key,typ), vb=rowVal(b,key,typ);
+        const c = typ==="n" ? (va-vb) : String(va).localeCompare(String(vb),"es",{numeric:true});
+        return dir==="asc"?c:-c;
+      });
+      arr.forEach(tr=>tbody.appendChild(tr));
+    });
+  });
+}
+function rowVal(tr, key, typ){
+  const td = tr.querySelector(`td[data-k="${key}"]`);
+  const v = td ? td.textContent.trim() : "";
+  return typ==="n" ? (parseFloat(v.replace(/[^0-9.-]/g,""))||0) : v;
+}
+function cellHtml(v, c){
+  const attrs = `data-k="${c.key}"`;
+  if(c.pill) return `<td ${attrs}><span class="pill ${pillFor(v)}">${esc(v)}</span></td>`;
+  if(c.type==="n") return `<td ${attrs} style="text-align:right;white-space:nowrap">${esc(v)}</td>`;
+  return `<td ${attrs}>${esc(v||"—")}</td>`;
+}
+
+// ---------------- filtros por pestaña ----------------
+function filterOptions(f){
+  const m={};
+  f.ds.forEach(dk=>DATA.data[dk].forEach(r=>{ const v=r[f.key]||"Sin dato"; m[v]=(m[v]||0)+1; }));
+  return Object.entries(m).sort((a,b)=>b[1]-a[1]).map(([v,c])=>({value:v,count:c}));
+}
+function renderFilters(){
+  const tab = TAB_BY_ID[currentTabId];
+  const box = document.getElementById("tabFilters");
+  if(!tab.filters.length){ box.innerHTML=""; return; }
+  box.innerHTML = tab.filters.map(f=>`
+    <div class="fgroup"><label>${f.label}</label>
+      <div class="dd" id="dd_${f.key}">
+        <button class="dd-toggle" id="tgl_${f.key}">Todos <span class="caret">▾</span></button>
+        <div class="dd-panel hidden" id="pnl_${f.key}"></div>
+      </div></div>`).join("");
+  tab.filters.forEach(f=>setupDropdown(f));
+}
+function setupDropdown(f){
+  if(!fstate[f.key]) fstate[f.key]=new Set();
+  const opts = filterOptions(f);
+  const tgl = document.getElementById("tgl_"+f.key);
+  const pnl = document.getElementById("pnl_"+f.key);
+  const sync=()=>{ const n=fstate[f.key].size;
+    tgl.innerHTML = (n===0?"Todos":(n+" seleccionados")) + ' <span class="caret">▾</span>'; };
+  pnl.innerHTML = `<input class="dd-search" placeholder="Buscar…">
+    <div class="dd-actions"><button data-a="all">Todos</button><button data-a="none">Ninguno</button></div>
+    <div class="dd-list"></div>`;
+  const list = pnl.querySelector(".dd-list");
+  const si = pnl.querySelector(".dd-search");
+  const drawList=(q)=>{
+    q=(q||"").toLowerCase();
+    list.innerHTML = opts.filter(o=>!q||o.value.toLowerCase().includes(q)).map(o=>
+      `<label class="dd-item"><input type="checkbox" value="${esc(o.value)}" ${fstate[f.key].has(o.value)?"checked":""}>
+        <span>${esc(o.value)}</span><span class="cnt">${o.count}</span></label>`).join("");
+    list.querySelectorAll("input[type=checkbox]").forEach(cb=>cb.addEventListener("change", ()=>{
+      if(cb.checked) fstate[f.key].add(cb.value); else fstate[f.key].delete(cb.value);
+      sync(); refresh();
+    }));
+  };
+  si.addEventListener("input", e=>drawList(e.target.value));
+  pnl.querySelectorAll(".dd-actions button").forEach(b=>b.addEventListener("click", ()=>{
+    if(b.dataset.a==="all") opts.forEach(o=>fstate[f.key].add(o.value));
+    else fstate[f.key].clear();
+    sync(); drawList(si.value); refresh();
+  }));
+  tgl.addEventListener("click", e=>{ e.stopPropagation();
+    const show = pnl.classList.contains("hidden"); closeAllPanels();
+    if(show){ pnl.classList.remove("hidden"); drawList(si.value); } });
+  sync();
+}
+function closeAllPanels(){ document.querySelectorAll(".dd-panel").forEach(p=>p.classList.add("hidden")); }
+document.addEventListener("click", e=>{ if(!e.target.closest(".dd")) closeAllPanels(); });
+
+// ---------------- pestañas: renders ----------------
+function sectionChart(id, title, hint, tall){
+  return `<div class="card"><h3>${title}</h3><div class="hint">${hint||""}</div>
+    <div class="chart-box ${tall?'tall':''}"><canvas id="${id}"></canvas></div></div>`;
+}
+
+function renderResumen(){
+  const OR=filterRows("oficiosRealizados"), RR=filterRows("oficiosRecibidos"),
+        NT=filterRows("notas"), AU=filterRows("audit");
+  document.getElementById("tabBody").innerHTML = renderKPIs() + `<div class="grid">
+    ${sectionChart("ch_orEstado","Oficios realizados por estado","¿Se entregaron los oficios emitidos?")}
+    ${sectionChart("ch_rrEstado","Oficios recibidos por estado","¿Se han contestado los oficios recibidos?")}
+    ${sectionChart("ch_oficiosMes","Oficios por mes","Emitidos vs recibidos")}
+    ${sectionChart("ch_notasMes","Notas informativas por mes","Reportes de actividad")}
+    ${sectionChart("ch_auditMes","Actividad del sistema por mes","Eventos del registro de auditoría")}
+  </div>`;
+  const orT=topN(countBy(OR,r=>r.estado),5); makeChart("ch_orEstado", mkDoughnut(orT.labels,orT.values,estadoColors(orT.labels)));
+  const rrT=topN(countBy(RR,r=>r.estado),5); makeChart("ch_rrEstado", mkDoughnut(rrT.labels,rrT.values,estadoColors(rrT.labels)));
+  const both=[...OR,...RR], ax=axisMonths(both);
+  makeChart("ch_oficiosMes", mkBar(ax,[{label:"Realizados",data:monthCounts(OR,ax),backgroundColor:"#2563eb",borderRadius:4,barThickness:14},
+    {label:"Recibidos",data:monthCounts(RR,ax),backgroundColor:"#93c5fd",borderRadius:4,barThickness:14}]));
+  const nax=axisMonths(NT); makeChart("ch_notasMes", mkLine(nax, monthCounts(NT,nax), "#7c3aed", true));
+  const aax=axisMonths(AU); makeChart("ch_auditMes", mkLine(aax, monthCounts(AU,aax), "#64748b", true));
+}
+
+function renderOR(){
+  const rows=filterRows("oficiosRealizados");
+  document.getElementById("tabBody").innerHTML = `<div class="count-badge">Mostrando <b>${rows.length}</b> oficios realizados.</div><div class="grid">
+    ${sectionChart("ch_orMes","Por mes","",false)}
+    ${sectionChart("ch_orEstado","Por estado","",false)}
+    ${sectionChart("ch_orArea","Por área (top 10)","",true)}
+  </div><div class="table-wrap" id="tbl_or"></div>`;
+  const ax=axisMonths(rows);
+  makeChart("ch_orMes", mkBar(ax,[{label:"Realizados",data:monthCounts(rows,ax),backgroundColor:"#2563eb",borderRadius:4,barThickness:16}]));
+  const t=topN(countBy(rows,r=>r.estado),5); makeChart("ch_orEstado", mkDoughnut(t.labels,t.values,estadoColors(t.labels)));
+  const a=topN(countBy(rows,r=>r.area||"Sin dato"),10); makeChart("ch_orArea", mkHBar(a.labels,a.values,"#2563eb"));
+  renderTable("tbl_or","oficiosRealizados",
+    [{key:"fecha",label:"Fecha"},{key:"numero",label:"No. oficio"},{key:"area",label:"Destino"},
+     {key:"estado",label:"Estado",pill:true},{key:"asunto",label:"Asunto"}], "Detalle de oficios realizados");
+}
+
+function renderRR(){
+  const rows=filterRows("oficiosRecibidos");
+  document.getElementById("tabBody").innerHTML = `<div class="count-badge">Mostrando <b>${rows.length}</b> oficios recibidos.</div><div class="grid">
+    ${sectionChart("ch_rrMes","Por mes","",false)}
+    ${sectionChart("ch_rrEstado","Por estado","",false)}
+    ${sectionChart("ch_rrArea","Por área (top 10)","",true)}
+  </div><div class="table-wrap" id="tbl_rr"></div>`;
+  const ax=axisMonths(rows);
+  makeChart("ch_rrMes", mkBar(ax,[{label:"Recibidos",data:monthCounts(rows,ax),backgroundColor:"#60a5fa",borderRadius:4,barThickness:16}]));
+  const t=topN(countBy(rows,r=>r.estado),5); makeChart("ch_rrEstado", mkDoughnut(t.labels,t.values,estadoColors(t.labels)));
+  const a=topN(countBy(rows,r=>r.area||"Sin dato"),10); makeChart("ch_rrArea", mkHBar(a.labels,a.values,"#60a5fa"));
+  renderTable("tbl_rr","oficiosRecibidos",
+    [{key:"fecha",label:"Fecha"},{key:"numero",label:"No. oficio"},{key:"remitente",label:"Remitente"},
+     {key:"area",label:"Área"},{key:"estado",label:"Estado",pill:true},{key:"asunto",label:"Asunto"}], "Detalle de oficios recibidos");
+}
+
+function renderNT(){
+  const rows=filterRows("notas");
+  document.getElementById("tabBody").innerHTML = `<div class="count-badge">Mostrando <b>${rows.length}</b> notas informativas.</div><div class="grid">
+    ${sectionChart("ch_ntMes","Por mes","",false)}
+    ${sectionChart("ch_ntArea","Por área (top 10)","",true)}
+  </div><div class="table-wrap" id="tbl_nt"></div>`;
+  const ax=axisMonths(rows); makeChart("ch_ntMes", mkLine(ax, monthCounts(rows,ax), "#7c3aed", true));
+  const a=topN(countBy(rows,r=>r.area||"Sin dato"),10); makeChart("ch_ntArea", mkHBar(a.labels,a.values,"#7c3aed"));
+  renderTable("tbl_nt","notas",
+    [{key:"fecha",label:"Fecha"},{key:"area",label:"Área"},{key:"autor",label:"Elaboró"},{key:"asunto",label:"Asunto"}], "Detalle de notas informativas");
+}
+
+function renderCU(){
+  const rows=filterRows("cuentas");
+  document.getElementById("tabBody").innerHTML = `<div class="count-badge">Mostrando <b>${rows.length}</b> cuentas de usuario.</div><div class="grid">
+    ${sectionChart("ch_cuMes","Por mes (captura)","",false)}
+    ${sectionChart("ch_cuEstado","Por estatus","",false)}
+    ${sectionChart("ch_cuArea","Por coordinación (top 10)","",true)}
+  </div><div class="table-wrap" id="tbl_cu"></div>`;
+  const ax=axisMonths(rows);
+  makeChart("ch_cuMes", mkBar(ax,[{label:"Cuentas",data:monthCounts(rows,ax),backgroundColor:"#0891b2",borderRadius:4,barThickness:16}]));
+  const t=topN(countBy(rows,r=>r.estado),5); makeChart("ch_cuEstado", mkDoughnut(t.labels,t.values,estadoColors(t.labels)));
+  const a=topN(countBy(rows,r=>r.area||"Sin dato"),10); makeChart("ch_cuArea", mkHBar(a.labels,a.values,"#0891b2"));
+  renderTable("tbl_cu","cuentas",
+    [{key:"fecha",label:"Captura"},{key:"persona",label:"Persona"},{key:"username",label:"Usuario"},
+     {key:"area",label:"Coordinación"},{key:"estado",label:"Estatus",pill:true}], "Detalle de cuentas de usuario");
+}
+
+function renderEN(){
+  const EN=filterRows("entregas"), IN=filterRows("ingresos");
+  document.getElementById("tabBody").innerHTML = `<div class="count-badge">Mostrando <b>${EN.length}</b> entregas y <b>${IN.length}</b> ingresos de suministro.</div><div class="grid">
+    ${sectionChart("ch_enTipo","Entregas por tipo","",false)}
+    ${sectionChart("ch_enArea","Entregas por área (top 10)","",true)}
+    ${sectionChart("ch_enMes","Ingresos vs entregas por mes","",false)}
+  </div><div class="table-wrap" id="tbl_en"></div><div class="table-wrap" id="tbl_in"></div>`;
+  const t=topN(countBy(EN,r=>r.tipo),3); makeChart("ch_enTipo", mkDoughnut(t.labels,t.values,["#0d9488","#7c3aed"]));
+  const a=topN(countBy(EN,r=>r.area||"Sin dato"),10); makeChart("ch_enArea", mkHBar(a.labels,a.values,"#0d9488"));
+  const both=[...EN,...IN], ax=axisMonths(both);
+  makeChart("ch_enMes", mkBar(ax,[{label:"Entregas",data:monthCounts(EN,ax),backgroundColor:"#0d9488",borderRadius:4,barThickness:14},
+    {label:"Ingresos",data:monthCounts(IN,ax),backgroundColor:"#7c3aed",borderRadius:4,barThickness:14}]));
+  renderTable("tbl_en","entregas",
+    [{key:"fecha",label:"Fecha"},{key:"tipo",label:"Tipo"},{key:"area",label:"Área"},
+     {key:"cantidad",label:"Cant.",type:"n"},{key:"marca",label:"Marca/Modelo"}], "Detalle de entregas");
+  renderTable("tbl_in","ingresos",
+    [{key:"fecha",label:"Fecha"},{key:"tipo",label:"Tipo"},{key:"cantidad",label:"Cant.",type:"n"},
+     {key:"monto",label:"Monto",type:"n"},{key:"contrato",label:"Contrato"}], "Detalle de ingresos");
+}
+
+function renderOP(){
+  const RE=filterRows("reubicaciones"), LI=filterRows("licencias"), VA=filterRows("vacaciones"), AU=filterRows("audit");
+  document.getElementById("tabBody").innerHTML = `<div class="grid">
+    ${sectionChart("ch_reTipo","Reubicaciones por tipo","",false)}
+    ${sectionChart("ch_reMes","Reubicaciones por mes","",false)}
+    ${sectionChart("ch_licAp","Licencias por aplicativo","",true)}
+    ${sectionChart("ch_vaEstado","Vacaciones / incidencias por estado","",false)}
+    ${sectionChart("ch_auModulo","Actividad por módulo","",true)}
+  </div><div class="table-wrap" id="tbl_re"></div><div class="table-wrap" id="tbl_li"></div>`;
+  const t=topN(countBy(RE,r=>r.tipo),4); makeChart("ch_reTipo", mkDoughnut(t.labels,t.values,["#2563eb","#7c3aed","#0d9488","#f59e0b"]));
+  const rax=axisMonths(RE); makeChart("ch_reMes", mkBar(rax,[{label:"Reubicaciones",data:monthCounts(RE,rax),backgroundColor:"#2563eb",borderRadius:4,barThickness:16}]));
+  const l=topN(countBy(LI,r=>r.ap),6); makeChart("ch_licAp", mkHBar(l.labels,l.values,"#db2777"));
+  const v=topN(countBy(VA,r=>r.estado),5); makeChart("ch_vaEstado", mkDoughnut(v.labels,v.values,estadoColors(v.labels)));
+  const m=topN(countBy(AU,r=>r.modulo),8); makeChart("ch_auModulo", mkHBar(m.labels,m.values,"#64748b"));
+  renderTable("tbl_re","reubicaciones",
+    [{key:"fecha",label:"Fecha"},{key:"tipo",label:"Tipo"},{key:"equipo",label:"Equipo"},
+     {key:"origen",label:"Origen"},{key:"area",label:"Destino"}], "Detalle de reubicaciones");
+  renderTable("tbl_li","licencias",
+    [{key:"fecha",label:"Asignación"},{key:"ap",label:"Aplicativo"},{key:"hostname",label:"Hostname"},
+     {key:"persona",label:"Persona"},{key:"area",label:"Coordinación"}], "Detalle de licencias");
+}
+
+function renderHallazgos(){
+  const FINDINGS = [
+    {t:"Alto backlog de oficios recibidos sin contestar", c:"err",
+     d:"250 de 373 oficios recibidos (67 %) siguen pendientes de contestación. Es el indicador de riesgo más visible del sistema."},
+    {t:"Oficios emitidos casi al 100 % entregados", c:"",
+     d:"242 de 245 oficios realizados (99 %) están entregados; solo 3 sin entregar y ninguno cancelado."},
+    {t:"Nombres de área inconsistentes en los datos fuente", c:"warn",
+     d:"“Soporte Técnico” aparece como “Soporte Tecnico”, “Informática” como “Informatica”, y “Coordinador/Coordinación” mezclados. En este panel se normalizaron (acentos y mayúsculas) para consolidar las cuentas."},
+    {t:"Errores de año en fechas (captura)", c:"err",
+     d:"Varias fechas tienen el año mal capturado: vacaciones_incidencias con 2032 (debería ser 2026), oficios_realizados.fecha_fin y bitacora_equipo_portatil con 1926. Además hay recepciones registradas hasta 2026-10-19, posteriores al corte de exportación (2026-09-07). Estas fechas se excluyeron del eje temporal."},
+    {t:"Datos sucios en cuentas_usuario.estatus", c:"warn",
+     d:"La columna mezcla etiquetas (“Entregado”, “Pendiente”) con frases libres y hasta un objeto ArrayFormula de Excel sin evaluar: señal de captura manual sin validación."},
+    {t:"El campo dias_transcurridos no se está calculando", c:"warn",
+     d:"En oficios_recibidos, 186 registros valen 0 y 187 están vacíos: la antigüedad de los oficios no se llena de forma confiable."},
+    {t:"Cobertura parcial de claves foráneas de área", c:"warn",
+     d:"cuentas_usuario.coordinacion_id solo está poblada en 301 de 646 filas (47 %) y entregas_suministro.coordinacion_id en 44 de 161 (27 %). El resto aparece como “Sin dato”."},
+    {t:"Concentración de licencias en Microsoft Office", c:"",
+     d:"133 de 149 asignaciones (89 %) son Microsoft Office; Adobe Acrobat Pro aporta 11. Baja diversidad, pero coherente con el parque instalado."},
+    {t:"Tóner domina las entregas de suministro", c:"",
+     d:"94 entregas de tóner frente a 67 de papel, con solo 24 ingresos de inventario registrados en el periodo."},
+  ];
+  document.getElementById("tabBody").innerHTML = `<div class="findings">
+    <div class="count-badge">Auditoría detallada (con ejemplos por tabla y columna) en el archivo <b>DATA_AUDIT.md</b> de la raíz del proyecto.</div>
+    <br>` + FINDINGS.map(x=>`<div class="finding ${x.c}"><div class="t">${x.t}</div><div class="d">${x.d}</div></div>`).join("") + `</div>`;
+}
+
+// ---------------- navegación ----------------
+function renderTabNav(){
+  document.getElementById("tabNav").innerHTML = TABS.map(t=>
+    `<button data-tab="${t.id}" class="${t.id===currentTabId?'active':''}">${t.label}</button>`).join("");
+  document.querySelectorAll("#tabNav button").forEach(b=>b.addEventListener("click", ()=>switchTab(b.dataset.tab)));
+}
+function switchTab(id){
+  currentTabId = id;
+  renderTabNav();
+  renderFilters();
+  destroyCharts();
+  RENDERERS[id]();
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+function refresh(){ destroyCharts(); RENDERERS[currentTabId](); }
+
+// ---------------- init ----------------
+document.getElementById("dateFrom").value = DATA.meta.minDate;
+document.getElementById("dateFrom").min = DATA.meta.minDate;
+document.getElementById("dateFrom").max = DATA.meta.maxDate;
+document.getElementById("dateTo").value = DATA.meta.maxDate;
+document.getElementById("dateTo").min = DATA.meta.minDate;
+document.getElementById("dateTo").max = DATA.meta.maxDate;
+document.getElementById("dateFrom").addEventListener("change", e=>{ state.from=e.target.value||DATA.meta.minDate; refresh(); });
+document.getElementById("dateTo").addEventListener("change", e=>{ state.to=e.target.value||DATA.meta.maxDate; refresh(); });
+document.getElementById("resetBtn").addEventListener("click", ()=>{
+  state.from=DATA.meta.minDate; state.to=DATA.meta.maxDate;
+  document.getElementById("dateFrom").value=state.from; document.getElementById("dateTo").value=state.to;
+  Object.keys(fstate).forEach(k=>fstate[k]=new Set());
+  renderFilters(); refresh();
+});
+
+applyTheme(THEME, false);
+document.getElementById("themeToggle").addEventListener("click", ()=>applyTheme(THEME==="dark"?"light":"dark", true));
+
+renderTabNav();
+renderFilters();
+renderResumen();
+</script>
+</body>
+</html>

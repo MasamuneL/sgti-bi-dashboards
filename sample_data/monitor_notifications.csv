@@ -1,0 +1,4 @@
+id,site_id,event_type,title,detail,read_at,created_at
+1,7,UP,Notificación de ejemplo,Texto sintético de ejemplo.,2026-02-26T16:30:00Z,2026-03-03T12:50:00Z
+2,1,DOWN,Notificación de ejemplo,Texto sintético de ejemplo.,2026-04-27T16:46:00Z,2026-01-27T18:51:00Z
+3,8,RECOVERED,Notificación de ejemplo,Texto sintético de ejemplo.,2026-08-13T07:59:00Z,2026-01-03T14:37:00Z

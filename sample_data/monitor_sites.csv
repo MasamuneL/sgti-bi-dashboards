@@ -1,0 +1,4 @@
+id,nombre,url,method,expected_status,timeout_seconds,check_interval_seconds,failure_threshold,success_threshold,consecutive_failures,consecutive_successes,current_status,last_checked_at,last_status_change_at,last_latency_ms,last_error_message,registrado_por_id,activo,created_at,updated_at
+1,Registro de ejemplo 1,https://ejemplo.gob.mx,GET,81,239,214,96,243,184,278,Pendiente,2026-04-19T11:19:00Z,2026-01-07T12:47:00Z,94,Texto sintético de ejemplo.,1,true,2026-04-13T18:49:00Z,2026-06-02T07:02:00Z
+2,Registro de ejemplo 2,https://ejemplo.gob.mx,GET,113,234,7,100,169,3,215,Entregado,2026-03-24T13:00:00Z,2026-08-29T08:20:00Z,27,Texto sintético de ejemplo.,7,true,2026-03-03T15:55:00Z,2026-08-04T15:45:00Z
+3,Registro de ejemplo 3,https://ejemplo.gob.mx,GET,26,280,243,70,27,212,197,Pendiente,2026-06-29T14:47:00Z,2026-04-06T11:00:00Z,192,Texto sintético de ejemplo.,6,true,2026-06-11T14:53:00Z,2026-03-27T11:12:00Z

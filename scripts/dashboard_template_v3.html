@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SGTI — Panel de Gestión de TI</title>
+<script src="vendor/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg:#f5f6f8; --card:#ffffff; --ink:#1c2430; --muted:#667085;
+    --line:#e5e7eb; --accent:#2563eb; --accent-2:#4f46e5; --accent-soft:#eff4ff;
+    --green:#16a34a; --amber:#d97706; --red:#dc2626; --gray:#64748b;
+    --radius:14px;
+    --shadow:0 1px 2px rgba(16,24,40,.05),0 1px 3px rgba(16,24,40,.07);
+    --shadow-lg:0 6px 20px rgba(16,24,40,.08);
+    --hover:#eceef2; --thead:#f6f7f9; --thead-hover:#eef0f3;
+    --row-border:#f0f1f4; --row-hover:#f8fafc; --heading:#1f2937; --grid:#eef0f3;
+    --input:#ffffff; --tooltip:#1c2430;
+    color-scheme:light;
+  }
+  [data-theme="dark"]{
+    --bg:#0b1220; --card:#141d2e; --ink:#e2e8f0; --muted:#94a3b8;
+    --line:#2a3446; --accent:#3b82f6; --accent-2:#6366f1; --accent-soft:#1c2a44;
+    --green:#22c55e; --amber:#f59e0b; --red:#ef4444; --gray:#9ca3af;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 1px 3px rgba(0,0,0,.35);
+    --shadow-lg:0 6px 22px rgba(0,0,0,.4);
+    --hover:#1e2a40; --thead:#17223a; --thead-hover:#1f2c48;
+    --row-border:#223047; --row-hover:#1c2740; --heading:#e2e8f0; --grid:#2a3648;
+    --input:#1a2436; --tooltip:#1e293b;
+    color-scheme:dark;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    font-size:14px;line-height:1.45}
+  .wrap{max-width:1240px;margin:0 auto;padding:18px 20px 70px}
+
+  .masthead{position:relative;background:var(--card);border:1px solid var(--line);
+    border-radius:16px;padding:20px 24px;box-shadow:var(--shadow);overflow:hidden}
+  .masthead::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;
+    background:linear-gradient(180deg,var(--accent),var(--accent-2))}
+  .masthead .row{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+  .masthead h1{margin:0;font-size:22px;font-weight:700;letter-spacing:-.02em}
+  .masthead .sub{color:var(--muted);font-size:13px;margin-top:3px}
+  .badges{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .badge{font-size:11.5px;font-weight:600;color:var(--muted);background:var(--bg);
+    border:1px solid var(--line);border-radius:999px;padding:4px 11px}
+  .badge b{color:var(--ink);font-weight:700}
+  .theme-toggle{border:1px solid var(--line);background:var(--card);color:var(--ink);
+    width:40px;height:40px;border-radius:11px;cursor:pointer;font-size:17px;
+    display:grid;place-items:center;transition:background .15s}
+  .theme-toggle:hover{background:var(--hover)}
+
+  .stickybar{position:sticky;top:0;z-index:50;background:var(--bg);
+    padding:12px 0 8px;margin-top:14px;
+    display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;
+    border-bottom:1px solid var(--line)}
+  nav.tabs{display:flex;gap:4px;flex-wrap:wrap}
+  nav.tabs button{border:1px solid transparent;background:transparent;color:var(--muted);
+    padding:8px 13px;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
+  nav.tabs button:hover{background:var(--hover);color:var(--ink)}
+  nav.tabs button.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .controls{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap}
+  .fgroup{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--muted)}
+  .fgroup label{font-weight:600;color:var(--ink);font-size:12px}
+  input[type=date]{border:1px solid var(--line);border-radius:9px;padding:7px 10px;
+    background:var(--input);color:var(--ink);font-size:13px}
+  .btn{border:1px solid var(--line);background:#fff;border-radius:9px;
+    padding:7px 13px;font-size:13px;cursor:pointer;color:var(--ink)}
+  .btn:hover{border-color:var(--line);background:var(--hover)}
+  .btn.ghost{color:var(--muted)}
+  .chk{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--ink);
+    border:1px solid var(--line);background:var(--card);border-radius:9px;padding:7px 11px;cursor:pointer;user-select:none}
+  .chk:hover{background:var(--hover)}
+  .chk input{accent-color:var(--accent);cursor:pointer;margin:0}
+
+  .tabfilters{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0 2px;align-items:flex-end}
+  .tabfilters .fgroup{min-width:200px}
+  .count-badge{font-size:12.5px;color:var(--muted);margin:10px 0 0}
+  .count-badge b{color:var(--ink)}
+
+  /* dropdown multi */
+  .dd{position:relative}
+  .dd-toggle{border:1px solid var(--line);background:var(--input);border-radius:9px;
+    padding:8px 12px;font-size:13px;cursor:pointer;min-width:210px;max-width:340px;width:100%;
+    text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .dd-toggle .caret{float:right;color:var(--muted);margin-left:8px}
+  .dd-panel{position:absolute;top:calc(100% + 6px);left:0;background:var(--card);
+    border:1px solid var(--line);border-radius:12px;box-shadow:0 8px 24px rgba(16,24,40,.16);
+    width:300px;max-height:340px;display:flex;flex-direction:column;z-index:60}
+  .dd-panel.hidden{display:none}
+  .dd-search{border:0;border-bottom:1px solid var(--line);padding:10px 12px;font-size:13px;outline:none}
+  .dd-actions{display:flex;gap:6px;padding:8px 10px;border-bottom:1px solid var(--line)}
+  .dd-actions button{font-size:12px;border:0;background:var(--accent-soft);color:var(--accent);
+    border-radius:6px;padding:4px 9px;cursor:pointer}
+  .dd-list{overflow-y:auto;padding:6px 0}
+  .dd-item{display:flex;align-items:center;gap:8px;padding:7px 12px;cursor:pointer;font-size:13px}
+  .dd-item:hover{background:var(--hover)}
+  .dd-item input{accent-color:var(--accent)}
+  .dd-item .cnt{color:var(--muted);font-size:11px;margin-left:auto}
+
+  section.tab{margin-top:18px}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:18px}
+  .kpi{background:var(--card);border:1px solid var(--line);border-top:3px solid var(--accent);
+    border-radius:var(--radius);padding:15px 15px 13px;box-shadow:var(--shadow)}
+  .kpi .k{font-size:11.5px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.03em}
+  .kpi .v{font-size:29px;font-weight:700;margin-top:5px;letter-spacing:-.02em}
+  .kpi .s{font-size:12px;color:var(--muted);margin-top:4px}
+  .kpi .s b{color:var(--ink)}
+  .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px;vertical-align:1px}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:14px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:16px 16px 12px;box-shadow:var(--shadow)}
+  .card h3{margin:0 0 2px;font-size:14px;font-weight:650;color:var(--heading)}
+  .card .hint{font-size:11.5px;color:var(--muted);margin-bottom:8px}
+  .chart-box{position:relative;height:250px}
+  .chart-box.tall{height:300px}
+  .card.full{grid-column:1 / -1}
+
+  .table-wrap{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:14px 16px 16px;box-shadow:var(--shadow);margin-top:16px}
+  .table-wrap h3{margin:0 0 8px;font-size:14px;font-weight:650;color:var(--heading)}
+  .tsearch{width:100%;max-width:340px;border:1px solid var(--line);border-radius:8px;
+    padding:8px 11px;font-size:13px;margin-bottom:10px;outline:none}
+  .tscroll{overflow:auto;max-height:420px;border:1px solid var(--line);border-radius:10px}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  thead th{position:sticky;top:0;background:var(--thead);text-align:left;font-weight:650;
+    padding:9px 11px;border-bottom:1px solid var(--line);cursor:pointer;white-space:nowrap;user-select:none}
+  thead th:hover{background:var(--thead-hover)}
+  tbody td{padding:8px 11px;border-bottom:1px solid var(--row-border);vertical-align:top}
+  tbody tr:hover{background:var(--row-hover)}
+  .pill{display:inline-block;padding:1px 9px;border-radius:999px;font-size:11.5px;font-weight:600;white-space:nowrap}
+  .pill.green{background:#e6f6ec;color:#15803d}
+  .pill.amber{background:#fdf3dc;color:#b45309}
+  .pill.red{background:#fdeaea;color:#b91c1c}
+  .pill.gray{background:#eef0f3;color:#4b5563}
+  [data-theme="dark"] .pill.green{background:#12301f;color:#4ade80}
+  [data-theme="dark"] .pill.amber{background:#2e2208;color:#fbbf24}
+  [data-theme="dark"] .pill.red{background:#3a1216;color:#f87171}
+  [data-theme="dark"] .pill.gray{background:#243047;color:#9ca3af}
+
+  .findings{margin-top:6px}
+  .finding{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--accent);
+    border-radius:10px;padding:12px 14px;margin-bottom:10px;box-shadow:var(--shadow)}
+  .finding.warn{border-left-color:var(--amber)}
+  .finding.err{border-left-color:var(--red)}
+  .finding .t{font-weight:650;margin-bottom:2px}
+  .finding .d{color:var(--muted);font-size:13px}
+  .finding.low{border-left-color:var(--gray)}
+  footer{margin-top:30px;color:var(--muted);font-size:12px;border-top:1px solid var(--line);padding-top:12px}
+  input[type=text]{border:1px solid var(--line);border-radius:9px;padding:7px 10px;
+    background:var(--input);color:var(--ink);font-size:13px}
+  input[type=range]{accent-color:var(--accent);width:120px;margin:0}
+  .tbar{display:flex;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap}
+  .tbar .tsearch{margin-bottom:0;flex:1;min-width:220px;max-width:420px}
+  .tbar .btn{white-space:nowrap}
+
+  /* heatmap semanal */
+  .heatmap{display:grid;grid-template-columns:110px repeat(7,1fr);gap:4px;align-items:center}
+  .heatmap .hcell{font-size:11px;color:var(--muted);text-align:center;font-weight:600}
+  .heatmap .wk{font-size:11.5px;color:var(--muted);font-weight:600;white-space:nowrap}
+  .heat-cell{height:26px;border-radius:5px;display:grid;place-items:center;font-size:10.5px;
+    font-weight:600;color:var(--muted);border:1px solid var(--line)}
+  .heat-cell.empty{background:transparent;color:transparent;border-color:transparent}
+  .heat-cell.q1{background:rgba(37,99,235,.14);color:var(--ink)}
+  .heat-cell.q2{background:rgba(37,99,235,.3);color:var(--ink)}
+  .heat-cell.q3{background:rgba(37,99,235,.5);color:#fff}
+  .heat-cell.q4{background:rgba(37,99,235,.72);color:#fff}
+  .heat-cell.q5{background:rgba(37,99,235,.95);color:#fff}
+  [data-theme="dark"] .heat-cell.q1{background:rgba(59,130,246,.22);color:var(--ink)}
+  [data-theme="dark"] .heat-cell.q2{background:rgba(59,130,246,.4);color:var(--ink)}
+  [data-theme="dark"] .heat-cell.q3{background:rgba(59,130,246,.58);color:#fff}
+  [data-theme="dark"] .heat-cell.q4{background:rgba(59,130,246,.78);color:#fff}
+  [data-theme="dark"] .heat-cell.q5{background:rgba(59,130,246,.98);color:#fff}
+  .heat-legend{display:flex;gap:6px;align-items:center;font-size:11px;color:var(--muted);margin-top:10px;flex-wrap:wrap}
+  .heat-legend .sw{width:14px;height:14px;border-radius:3px;display:inline-block}
+  @media (max-width:640px){ .kpis{grid-template-columns:repeat(2,1fr)} .controls{width:100%} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="masthead">
+    <div class="row">
+      <div>
+        <h1>SGTI — Panel de Gestión de TI</h1>
+        <div class="sub">Hospital Regional de Alta Especialidad · Sistema de Gestión de TI</div>
+      </div>
+      <div class="badges">
+        <span class="badge">Exportación <b>2026-09-07</b></span>
+        <span class="badge"><b>43</b> tablas normalizadas</span>
+        <button class="theme-toggle" id="themeToggle" title="Cambiar tema claro/oscuro" aria-label="Cambiar tema">🌙</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="stickybar">
+    <nav class="tabs" id="tabNav"></nav>
+    <div class="controls">
+      <div class="fgroup"><label for="globalSearch">Buscar</label><input type="text" id="globalSearch" placeholder="Buscar…"></div>
+      <div class="fgroup"><label for="dateFrom">Desde</label><input type="date" id="dateFrom"></div>
+      <div class="fgroup"><label for="dateTo">Hasta</label><input type="date" id="dateTo"></div>
+      <div class="fgroup"><label for="topNSlider">Top N: <span id="topNVal">10</span></label><input type="range" id="topNSlider" min="3" max="20" value="10"></div>
+      <button class="btn ghost" id="resetBtn">Restablecer</button>
+      <label class="chk"><input type="checkbox" id="acumChk"> Acumulado</label>
+    </div>
+  </div>
+
+  <div class="tabfilters" id="tabFilters"></div>
+
+  <section class="tab" id="tabBody"></section>
+
+  <footer>Generado desde Data/parquet con scripts/build_dashboard.py · Chart.js v4 (local) ·
+    Auditoría detallada en DATA_AUDIT.md · El filtro de fechas aplica a todas las pestañas; cada pestaña tiene sus propios filtros de área/estado.</footer>
+</div>
+
+<script>
+const DATA = __DATA_JSON__;
+
+const PALETTE = ["#2563eb","#16a34a","#d97706","#dc2626","#7c3aed","#0d9488","#db2777","#64748b","#f59e0b","#0891b2"];
+const C = {green:"#16a34a", amber:"#d97706", red:"#dc2626", gray:"#64748b", blue:"#2563eb", purple:"#7c3aed", teal:"#0d9488", pink:"#db2777"};
+
+let THEME = (() => {
+  const s = localStorage.getItem("sgti-theme");
+  if(s === "light" || s === "dark") return s;
+  return (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) ? "dark" : "light";
+})();
+
+Chart.defaults.font.family = getComputedStyle(document.body).fontFamily;
+Chart.defaults.plugins.tooltip.padding = 10;
+Chart.defaults.plugins.tooltip.cornerRadius = 8;
+
+function gridColor(){ return THEME === "dark" ? "#2a3648" : "#eef0f3"; }
+function cardBg(){ return THEME === "dark" ? "#141d2e" : "#ffffff"; }
+function applyTheme(t, rerender){
+  THEME = t;
+  document.documentElement.setAttribute("data-theme", t);
+  localStorage.setItem("sgti-theme", t);
+  Chart.defaults.color = t === "dark" ? "#94a3b8" : "#667085";
+  Chart.defaults.plugins.tooltip.backgroundColor = t === "dark" ? "#1e293b" : "#1c2430";
+  const tg = document.getElementById("themeToggle");
+  if(tg) tg.textContent = t === "dark" ? "☀️" : "🌙";
+  if(rerender) refresh();
+}
+
+const state = { from: DATA.meta.minDate, to: DATA.meta.maxDate };
+const fstate = {};   // filterKey -> Set
+let currentTabId = "resumen";
+let ACUM = false;
+let N = 10;            // top-N paramétrico (ranking)
+let GSEARCH = "";      // término de búsqueda global
+
+// ---------------- pestañas ----------------
+const TABS = [
+  {id:"resumen", label:"Resumen", ds:[], filters:[]},
+  {id:"or", label:"Oficios realizados", ds:["oficiosRealizados"],
+    filters:[{key:"area",label:"Área / Destino",ds:["oficiosRealizados"]},
+             {key:"estado",label:"Estado",ds:["oficiosRealizados"]}]},
+  {id:"rr", label:"Oficios recibidos", ds:["oficiosRecibidos"],
+    filters:[{key:"area",label:"Área / Remitente",ds:["oficiosRecibidos"]},
+             {key:"estado",label:"Estado",ds:["oficiosRecibidos"]}]},
+  {id:"nt", label:"Notas informativas", ds:["notas"],
+    filters:[{key:"area",label:"Área (TI)",ds:["notas"]}]},
+  {id:"cu", label:"Cuentas de usuario", ds:["cuentas"],
+    filters:[{key:"area",label:"Coordinación",ds:["cuentas"]},
+             {key:"estado",label:"Estatus",ds:["cuentas"]}]},
+  {id:"en", label:"Suministros", ds:["entregas","ingresos"],
+    filters:[{key:"tipo",label:"Tipo",ds:["entregas","ingresos"]},
+             {key:"area",label:"Área",ds:["entregas"]}]},
+  {id:"op", label:"Operaciones", ds:["reubicaciones","licencias","vacaciones","audit"], filters:[]},
+  {id:"hallazgos", label:"Hallazgos", ds:[], filters:[]},
+  {id:"calidad", label:"Calidad de datos", ds:[], filters:[]},
+];
+const TAB_BY_ID = Object.fromEntries(TABS.map(t=>[t.id,t]));
+const RENDERERS = {
+  resumen: renderResumen, or: renderOR, rr: renderRR, nt: renderNT,
+  cu: renderCU, en: renderEN, op: renderOP, hallazgos: renderHallazgos, calidad: renderCalidad
+};
+
+// ---------------- utilidades ----------------
+function monthOf(d){ return d ? d.slice(0,7) : ""; }
+function dateOk(d){ return !d || (d >= state.from && d <= state.to); }
+function filterRows(dsKey){
+  let rows = DATA.data[dsKey].filter(r => dateOk(r.fecha));
+  if(GSEARCH){
+    const q = GSEARCH.toLowerCase();
+    rows = rows.filter(r => Object.values(r).join(" ").toLowerCase().includes(q));
+  }
+  const tab = TAB_BY_ID[currentTabId];
+  tab.filters.forEach(f => {
+    if(!f.ds.includes(dsKey)) return;
+    const sel = fstate[f.key];
+    if(sel && sel.size) rows = rows.filter(r => sel.has(r[f.key] || "Sin dato"));
+  });
+  return rows;
+}
+function monthsBetween(m0, m1){
+  const out=[]; let y=+m0.slice(0,4), m=+m0.slice(5,7); const y1=+m1.slice(0,4), mo1=+m1.slice(5,7);
+  while(y<y1 || (y===y1 && m<=mo1)){ out.push(y+"-"+String(m).padStart(2,"0")); m++; if(m>12){m=1;y++;} }
+  return out;
+}
+function axisMonths(rows){
+  const ms = rows.map(r=>monthOf(r.fecha)).filter(Boolean).sort();
+  if(!ms.length) return [];
+  return monthsBetween(ms[0], ms[ms.length-1]);
+}
+function monthCounts(rows, axis){
+  const m={}; rows.forEach(r=>{const k=monthOf(r.fecha); if(k) m[k]=(m[k]||0)+1;});
+  const counts = axis.map(a=>m[a]||0);
+  if(!ACUM) return counts;
+  let acc=0; return counts.map(c=>(acc+=c));
+}
+function countBy(rows, keyFn){ const m={}; rows.forEach(r=>{const k=keyFn(r); m[k]=(m[k]||0)+1;}); return m; }
+function topN(map, n){
+  const e = Object.entries(map).sort((a,b)=>b[1]-a[1]);
+  if(e.length<=n) return {labels:e.map(x=>x[0]), values:e.map(x=>x[1])};
+  const head=e.slice(0,n-1); const rest=e.slice(n-1).reduce((s,x)=>s+x[1],0);
+  return {labels:[...head.map(x=>x[0]),"Otros"], values:[...head.map(x=>x[1]), rest]};
+}
+function esc(s){ return String(s).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+function pillFor(status){
+  const map={"Entregado":"green","Contestado":"green","Aprobada":"green","Entregada":"green",
+    "Sin entregar":"amber","Pendiente":"amber","Cancelado":"red","Negativa":"red","Otro":"gray"};
+  return map[status]||"gray";
+}
+
+// ---------------- exportación CSV (F1) ----------------
+function csvCell(v){
+  if(v === null || v === undefined) return "";
+  let s = String(v);
+  if(/[",\r\n]/.test(s)) s = '"' + s.replace(/"/g, '""') + '"';
+  return s;
+}
+function downloadCSV(rows, cols, filename){
+  const lines = [cols.map(c=>csvCell(c.label)).join(",")];
+  rows.forEach(r=>{ lines.push(cols.map(c=>csvCell(r[c.key])).join(",")); });
+  const blob = new Blob(["\ufeff" + lines.join("\r\n")], {type:"text/csv;charset=utf-8;"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 1500);
+}
+
+// ---------------- heatmap semanal (F3) ----------------
+function parseDateStr(s){ return new Date(s + "T00:00:00"); }
+function isoWeekInfo(d){
+  const date = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const dayNum = date.getDay() || 7;
+  date.setDate(date.getDate() + 4 - dayNum);   // jueves de la semana ISO
+  const year = date.getFullYear();
+  const yearStart = new Date(year, 0, 1);
+  const week = Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
+  return {year, week};
+}
+function heatIntensity(n, max){
+  if(!n) return 0;
+  if(max <= 0) return 1;
+  return Math.max(1, Math.min(5, Math.ceil((n / max) * 5)));
+}
+const HEAT_DAYS = ["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"];
+function renderHeatmap(OR, RR){
+  const dayCount = {};
+  OR.concat(RR).forEach(r=>{ if(r.fecha) dayCount[r.fecha]=(dayCount[r.fecha]||0)+1; });
+  const weeks = {};
+  let max = 0;
+  Object.entries(dayCount).forEach(([f,n])=>{
+    const d = parseDateStr(f);
+    if(isNaN(d.getTime())) return;
+    const dow = d.getDay();
+    const col = dow === 0 ? 6 : dow - 1;   // Lun=0 … Dom=6
+    const {year, week} = isoWeekInfo(d);
+    const key = year + "-W" + String(week).padStart(2,"0");
+    if(!weeks[key]) weeks[key] = {year, week, cells: new Array(7).fill(null)};
+    weeks[key].cells[col] = {date: f, n};
+    if(n > max) max = n;
+  });
+  const keys = Object.keys(weeks).sort();
+  if(!keys.length){
+    return `<div class="card full"><h3>Heatmap semanal (oficios emitidos + recibidos)</h3>
+      <div class="hint">Sin registros en el rango seleccionado.</div></div>`;
+  }
+  const head = `<div class="heatmap"><div class="wk"></div>` +
+    HEAT_DAYS.map(d=>`<div class="hcell">${d}</div>`).join("") +
+    keys.map(k=>{
+      const w = weeks[k];
+      const label = `S${w.week} · ${w.year}`;
+      const cells = w.cells.map(c=>{
+        if(!c) return `<div class="heat-cell empty"></div>`;
+        const lvl = heatIntensity(c.n, max);
+        const dd = c.date.slice(8,10), mm = c.date.slice(5,7), yyyy = c.date.slice(0,4);
+        return `<div class="heat-cell q${lvl}" title="${dd}/${mm}/${yyyy} · ${c.n} registros">${c.n}</div>`;
+      }).join("");
+      return `<div class="wk">${label}</div>` + cells;
+    }).join("") + `</div>`;
+  const legend = `<div class="heat-legend">Intensidad:
+    <span class="sw" style="background:rgba(37,99,235,.14)"></span>
+    <span class="sw" style="background:rgba(37,99,235,.3)"></span>
+    <span class="sw" style="background:rgba(37,99,235,.5)"></span>
+    <span class="sw" style="background:rgba(37,99,235,.72)"></span>
+    <span class="sw" style="background:rgba(37,99,235,.95)"></span>
+    <span>más registros →</span></div>`;
+  return `<div class="card full"><h3>Heatmap semanal (oficios emitidos + recibidos)</h3>
+    <div class="hint">Filas = semana ISO · columnas = Lun a Dom · celda = registros del día.</div>
+    ${head}${legend}</div>`;
+}
+
+// ---------------- gráficas ----------------
+const charts = {};
+function makeChart(id, cfg){
+  if(charts[id]) charts[id].destroy();
+  const el = document.getElementById(id); if(!el) return;
+  charts[id] = new Chart(el, cfg);
+}
+function destroyCharts(){ Object.values(charts).forEach(c=>c.destroy()); for(const k in charts) delete charts[k]; }
+function mkDoughnut(labels, values, colors){
+  return {type:"doughnut", data:{labels, datasets:[{data:values, backgroundColor:colors,
+    borderColor:cardBg(), borderWidth:2, hoverOffset:6}]},
+    options:{maintainAspectRatio:false, cutout:"62%",
+      plugins:{legend:{position:"bottom", labels:{boxWidth:12, boxHeight:12, padding:12, font:{size:11}}}}}};
+}
+function mkHBar(labels, values, color){
+  return {type:"bar", data:{labels, datasets:[{data:values, backgroundColor:color, borderRadius:5, barThickness:16}]},
+    options:{indexAxis:"y", maintainAspectRatio:false, plugins:{legend:{display:false}},
+      scales:{x:{grid:{color:gridColor()}, beginAtZero:true, ticks:{precision:0}}, y:{grid:{display:false}}}}};
+}
+function mkBar(labels, datasets){
+  return {type:"bar", data:{labels, datasets}, options:{maintainAspectRatio:false,
+    plugins:{legend:{position:"bottom", labels:{boxWidth:12, boxHeight:12, font:{size:11}}}},
+    scales:{x:{grid:{display:false}}, y:{beginAtZero:true, grid:{color:gridColor()}, ticks:{precision:0}}}}};
+}
+function mkLine(labels, values, color, fill){
+  return {type:"line", data:{labels, datasets:[{data:values, borderColor:color,
+    backgroundColor: fill ? color+"22":"transparent", fill: fill||false, tension:.32,
+    pointRadius:2.5, pointBackgroundColor:color, borderWidth:2.2}]},
+    options:{maintainAspectRatio:false, plugins:{legend:{display:false}},
+      scales:{y:{beginAtZero:true, grid:{color:gridColor()}, ticks:{precision:0}}, x:{grid:{display:false}}}}};
+}
+function estadoColors(labels){
+  const map={"Entregado":C.green,"Contestado":C.green,"Aprobada":C.green,"Entregada":C.green,
+    "Sin entregar":C.amber,"Pendiente":C.amber,"Cancelado":C.red,"Negativa":C.red,"Otro":C.gray};
+  return labels.map(l=>map[l]||PALETTE[labels.indexOf(l)%PALETTE.length]);
+}
+
+// ---------------- KPIs ----------------
+const KPI_DEFS = [
+  {label:"Oficios realizados", big:()=>filterRows("oficiosRealizados").length,
+    sub:()=>{const r=filterRows("oficiosRealizados"); const e=r.filter(x=>x.estado==="Entregado").length;
+      return `<span class="dot" style="background:${C.green}"></span>${e} entregados · <span class="dot" style="background:${C.amber}"></span>${r.length-e} sin entregar`;}},
+  {label:"Oficios recibidos", big:()=>filterRows("oficiosRecibidos").length,
+    sub:()=>{const r=filterRows("oficiosRecibidos"); const c=r.filter(x=>x.estado==="Contestado").length;
+      return `<span class="dot" style="background:${C.green}"></span>${c} contestados · <span class="dot" style="background:${C.amber}"></span>${r.length-c} pendientes`;}},
+  {label:"Notas informativas", big:()=>filterRows("notas").length, sub:()=>"reportes de actividad"},
+  {label:"Cuentas de usuario", big:()=>filterRows("cuentas").length,
+    sub:()=>{const r=filterRows("cuentas"); const e=r.filter(x=>x.estado==="Entregada").length; const p=r.filter(x=>x.estado==="Pendiente").length;
+      return `<span class="dot" style="background:${C.green}"></span>${e} entregadas · <span class="dot" style="background:${C.amber}"></span>${p} pendientes`;}},
+  {label:"Entregas de suministro", big:()=>filterRows("entregas").length,
+    sub:()=>{const r=filterRows("entregas"); const t=r.filter(x=>x.tipo==="Tóner").length;
+      return `<span class="dot" style="background:${C.teal}"></span>${t} tóner · <span class="dot" style="background:${C.purple}"></span>${r.length-t} papel`;}},
+  {label:"Equipos reubicados", big:()=>filterRows("reubicaciones").length, sub:()=>"movimientos de equipo"},
+];
+function renderKPIs(){
+  return `<div class="kpis">` + KPI_DEFS.map(d=>`
+    <div class="kpi"><div class="k">${d.label}</div><div class="v">${d.big()}</div><div class="s">${d.sub()}</div></div>`).join("") + `</div>`;
+}
+
+// ---------------- tabla de drill-down ----------------
+function renderTable(containerId, dsKey, cols, title){
+  const rows = filterRows(dsKey);
+  const el = document.getElementById(containerId);
+  el.innerHTML = `<h3>${title} <span class="count-badge">— <b>${rows.length}</b> registros</span></h3>
+    <div class="tbar">
+      <input class="tsearch" placeholder="Buscar en estos registros…">
+      <button class="btn" type="button">Descargar CSV</button>
+    </div>
+    <div class="tscroll"><table><thead>${cols.map(c=>`<th data-k="${c.key}" data-t="${c.type||'s'}">${c.label}</th>`).join("")}</thead>
+    <tbody>${rows.slice(0,200).map(r=>`<tr>${cols.map(c=>cellHtml(r[c.key], c)).join("")}</tr>`).join("")}</tbody></table></div>
+    ${rows.length>200?`<div class="count-badge">Mostrando los primeros 200 de ${rows.length} registros.</div>`:""}`;
+  const tbody = el.querySelector("tbody");
+  const search = el.querySelector(".tsearch");
+  const csvBtn = el.querySelector(".btn");
+  csvBtn.addEventListener("click", ()=>{
+    const q = search.value.toLowerCase().trim();
+    const exportRows = q ? rows.filter(r => cols.some(c => {
+      const v = r[c.key];
+      return v != null && String(v).toLowerCase().includes(q);
+    })) : rows;
+    downloadCSV(exportRows, cols, dsKey + ".csv");
+  });
+  search.addEventListener("input", ()=>{ const q=search.value.toLowerCase();
+    Array.from(tbody.querySelectorAll("tr")).forEach(tr=>{ tr.style.display = tr.textContent.toLowerCase().includes(q) ? "" : "none"; }); });
+  el.querySelectorAll("thead th").forEach(th=>{
+    th.addEventListener("click", ()=>{
+      const key=th.dataset.k, typ=th.dataset.t, dir=th.dataset.dir==="asc"?"desc":"asc";
+      el.querySelectorAll("thead th").forEach(x=>delete x.dataset.dir); th.dataset.dir=dir;
+      const arr=Array.from(tbody.querySelectorAll("tr")).sort((a,b)=>{
+        const va=rowVal(a,key,typ), vb=rowVal(b,key,typ);
+        const c = typ==="n" ? (va-vb) : String(va).localeCompare(String(vb),"es",{numeric:true});
+        return dir==="asc"?c:-c;
+      });
+      arr.forEach(tr=>tbody.appendChild(tr));
+    });
+  });
+}
+function rowVal(tr, key, typ){
+  const td = tr.querySelector(`td[data-k="${key}"]`);
+  const v = td ? td.textContent.trim() : "";
+  return typ==="n" ? (parseFloat(v.replace(/[^0-9.-]/g,""))||0) : v;
+}
+function cellHtml(v, c){
+  const attrs = `data-k="${c.key}"`;
+  if(c.pill) return `<td ${attrs}><span class="pill ${pillFor(v)}">${esc(v)}</span></td>`;
+  if(c.type==="n") return `<td ${attrs} style="text-align:right;white-space:nowrap">${esc(v)}</td>`;
+  return `<td ${attrs}>${esc(v||"—")}</td>`;
+}
+
+// ---------------- filtros por pestaña ----------------
+function filterOptions(f){
+  const m={};
+  f.ds.forEach(dk=>DATA.data[dk].forEach(r=>{ const v=r[f.key]||"Sin dato"; m[v]=(m[v]||0)+1; }));
+  return Object.entries(m).sort((a,b)=>b[1]-a[1]).map(([v,c])=>({value:v,count:c}));
+}
+function renderFilters(){
+  const tab = TAB_BY_ID[currentTabId];
+  const box = document.getElementById("tabFilters");
+  if(!tab.filters.length){ box.innerHTML=""; return; }
+  box.innerHTML = tab.filters.map(f=>`
+    <div class="fgroup"><label>${f.label}</label>
+      <div class="dd" id="dd_${f.key}">
+        <button class="dd-toggle" id="tgl_${f.key}">Todos <span class="caret">▾</span></button>
+        <div class="dd-panel hidden" id="pnl_${f.key}"></div>
+      </div></div>`).join("");
+  tab.filters.forEach(f=>setupDropdown(f));
+}
+function setupDropdown(f){
+  if(!fstate[f.key]) fstate[f.key]=new Set();
+  const opts = filterOptions(f);
+  const tgl = document.getElementById("tgl_"+f.key);
+  const pnl = document.getElementById("pnl_"+f.key);
+  const sync=()=>{ const n=fstate[f.key].size;
+    tgl.innerHTML = (n===0?"Todos":(n+" seleccionados")) + ' <span class="caret">▾</span>'; };
+  pnl.innerHTML = `<input class="dd-search" placeholder="Buscar…">
+    <div class="dd-actions"><button data-a="all">Todos</button><button data-a="none">Ninguno</button></div>
+    <div class="dd-list"></div>`;
+  const list = pnl.querySelector(".dd-list");
+  const si = pnl.querySelector(".dd-search");
+  const drawList=(q)=>{
+    q=(q||"").toLowerCase();
+    list.innerHTML = opts.filter(o=>!q||o.value.toLowerCase().includes(q)).map(o=>
+      `<label class="dd-item"><input type="checkbox" value="${esc(o.value)}" ${fstate[f.key].has(o.value)?"checked":""}>
+        <span>${esc(o.value)}</span><span class="cnt">${o.count}</span></label>`).join("");
+    list.querySelectorAll("input[type=checkbox]").forEach(cb=>cb.addEventListener("change", ()=>{
+      if(cb.checked) fstate[f.key].add(cb.value); else fstate[f.key].delete(cb.value);
+      sync(); refresh();
+    }));
+  };
+  si.addEventListener("input", e=>drawList(e.target.value));
+  pnl.querySelectorAll(".dd-actions button").forEach(b=>b.addEventListener("click", ()=>{
+    if(b.dataset.a==="all") opts.forEach(o=>fstate[f.key].add(o.value));
+    else fstate[f.key].clear();
+    sync(); drawList(si.value); refresh();
+  }));
+  tgl.addEventListener("click", e=>{ e.stopPropagation();
+    const show = pnl.classList.contains("hidden"); closeAllPanels();
+    if(show){ pnl.classList.remove("hidden"); drawList(si.value); } });
+  sync();
+}
+function closeAllPanels(){ document.querySelectorAll(".dd-panel").forEach(p=>p.classList.add("hidden")); }
+document.addEventListener("click", e=>{ if(!e.target.closest(".dd")) closeAllPanels(); });
+
+// ---------------- pestañas: renders ----------------
+function sectionChart(id, title, hint, tall){
+  return `<div class="card"><h3>${title}</h3><div class="hint">${hint||""}</div>
+    <div class="chart-box ${tall?'tall':''}"><canvas id="${id}"></canvas></div></div>`;
+}
+
+function renderResumen(){
+  const OR=filterRows("oficiosRealizados"), RR=filterRows("oficiosRecibidos"),
+        NT=filterRows("notas"), AU=filterRows("audit");
+  document.getElementById("tabBody").innerHTML = renderKPIs() + `<div class="grid">
+    ${sectionChart("ch_orEstado","Oficios realizados por estado","¿Se entregaron los oficios emitidos?")}
+    ${sectionChart("ch_rrEstado","Oficios recibidos por estado","¿Se han contestado los oficios recibidos?")}
+    ${sectionChart("ch_oficiosMes","Oficios por mes","Emitidos vs recibidos")}
+    ${sectionChart("ch_notasMes","Notas informativas por mes","Reportes de actividad")}
+    ${sectionChart("ch_auditMes","Actividad del sistema por mes","Eventos del registro de auditoría")}
+  </div>` + renderHeatmap(OR, RR);
+  const orT=topN(countBy(OR,r=>r.estado),5); makeChart("ch_orEstado", mkDoughnut(orT.labels,orT.values,estadoColors(orT.labels)));
+  const rrT=topN(countBy(RR,r=>r.estado),5); makeChart("ch_rrEstado", mkDoughnut(rrT.labels,rrT.values,estadoColors(rrT.labels)));
+  const both=[...OR,...RR], ax=axisMonths(both);
+  makeChart("ch_oficiosMes", mkBar(ax,[{label:"Realizados",data:monthCounts(OR,ax),backgroundColor:"#2563eb",borderRadius:4,barThickness:14},
+    {label:"Recibidos",data:monthCounts(RR,ax),backgroundColor:"#93c5fd",borderRadius:4,barThickness:14}]));
+  const nax=axisMonths(NT); makeChart("ch_notasMes", mkLine(nax, monthCounts(NT,nax), "#7c3aed", true));
+  const aax=axisMonths(AU); makeChart("ch_auditMes", mkLine(aax, monthCounts(AU,aax), "#64748b", true));
+}
+
+function renderOR(){
+  const rows=filterRows("oficiosRealizados");
+  document.getElementById("tabBody").innerHTML = `<div class="count-badge">Mostrando <b>${rows.length}</b> oficios realizados.</div><div class="grid">
+    ${sectionChart("ch_orMes","Por mes","",false)}
+    ${sectionChart("ch_orEstado","Por estado","",false)}
+    ${sectionChart("ch_orArea","Por área (top 10)","",true)}
+  </div><div class="table-wrap" id="tbl_or"></div>`;
+  const ax=axisMonths(rows);
+  makeChart("ch_orMes", mkBar(ax,[{label:"Realizados",data:monthCounts(rows,ax),backgroundColor:"#2563eb",borderRadius:4,barThickness:16}]));
+  const t=topN(countBy(rows,r=>r.estado),5); makeChart("ch_orEstado", mkDoughnut(t.labels,t.values,estadoColors(t.labels)));
+  const a=topN(countBy(rows,r=>r.area||"Sin dato"),N); makeChart("ch_orArea", mkHBar(a.labels,a.values,"#2563eb"));
+  renderTable("tbl_or","oficiosRealizados",
+    [{key:"fecha",label:"Fecha"},{key:"numero",label:"No. oficio"},{key:"area",label:"Destino"},
+     {key:"estado",label:"Estado",pill:true},{key:"asunto",label:"Asunto"}], "Detalle de oficios realizados");
+}
+
+function renderRR(){
+  const rows=filterRows("oficiosRecibidos");
+  document.getElementById("tabBody").innerHTML = `<div class="count-badge">Mostrando <b>${rows.length}</b> oficios recibidos.</div><div class="grid">
+    ${sectionChart("ch_rrMes","Por mes","",false)}
+    ${sectionChart("ch_rrEstado","Por estado","",false)}
+    ${sectionChart("ch_rrArea","Por área (top 10)","",true)}
+  </div><div class="table-wrap" id="tbl_rr"></div>`;
+  const ax=axisMonths(rows);
+  makeChart("ch_rrMes", mkBar(ax,[{label:"Recibidos",data:monthCounts(rows,ax),backgroundColor:"#60a5fa",borderRadius:4,barThickness:16}]));
+  const t=topN(countBy(rows,r=>r.estado),5); makeChart("ch_rrEstado", mkDoughnut(t.labels,t.values,estadoColors(t.labels)));
+  const a=topN(countBy(rows,r=>r.area||"Sin dato"),N); makeChart("ch_rrArea", mkHBar(a.labels,a.values,"#60a5fa"));
+  renderTable("tbl_rr","oficiosRecibidos",
+    [{key:"fecha",label:"Fecha"},{key:"numero",label:"No. oficio"},{key:"remitente",label:"Remitente"},
+     {key:"area",label:"Área"},{key:"estado",label:"Estado",pill:true},{key:"asunto",label:"Asunto"}], "Detalle de oficios recibidos");
+}
+
+function renderNT(){
+  const rows=filterRows("notas");
+  document.getElementById("tabBody").innerHTML = `<div class="count-badge">Mostrando <b>${rows.length}</b> notas informativas.</div><div class="grid">
+    ${sectionChart("ch_ntMes","Por mes","",false)}
+    ${sectionChart("ch_ntArea","Por área (top 10)","",true)}
+  </div><div class="table-wrap" id="tbl_nt"></div>`;
+  const ax=axisMonths(rows); makeChart("ch_ntMes", mkLine(ax, monthCounts(rows,ax), "#7c3aed", true));
+  const a=topN(countBy(rows,r=>r.area||"Sin dato"),N); makeChart("ch_ntArea", mkHBar(a.labels,a.values,"#7c3aed"));
+  renderTable("tbl_nt","notas",
+    [{key:"fecha",label:"Fecha"},{key:"area",label:"Área"},{key:"autor",label:"Elaboró"},{key:"asunto",label:"Asunto"}], "Detalle de notas informativas");
+}
+
+function renderCU(){
+  const rows=filterRows("cuentas");
+  document.getElementById("tabBody").innerHTML = `<div class="count-badge">Mostrando <b>${rows.length}</b> cuentas de usuario.</div><div class="grid">
+    ${sectionChart("ch_cuMes","Por mes (captura)","",false)}
+    ${sectionChart("ch_cuEstado","Por estatus","",false)}
+    ${sectionChart("ch_cuArea","Por coordinación (top 10)","",true)}
+  </div><div class="table-wrap" id="tbl_cu"></div>`;
+  const ax=axisMonths(rows);
+  makeChart("ch_cuMes", mkBar(ax,[{label:"Cuentas",data:monthCounts(rows,ax),backgroundColor:"#0891b2",borderRadius:4,barThickness:16}]));
+  const t=topN(countBy(rows,r=>r.estado),5); makeChart("ch_cuEstado", mkDoughnut(t.labels,t.values,estadoColors(t.labels)));
+  const a=topN(countBy(rows,r=>r.area||"Sin dato"),N); makeChart("ch_cuArea", mkHBar(a.labels,a.values,"#0891b2"));
+  renderTable("tbl_cu","cuentas",
+    [{key:"fecha",label:"Captura"},{key:"persona",label:"Persona"},{key:"username",label:"Usuario"},
+     {key:"area",label:"Coordinación"},{key:"estado",label:"Estatus",pill:true}], "Detalle de cuentas de usuario");
+}
+
+function renderEN(){
+  const EN=filterRows("entregas"), IN=filterRows("ingresos");
+  document.getElementById("tabBody").innerHTML = `<div class="count-badge">Mostrando <b>${EN.length}</b> entregas y <b>${IN.length}</b> ingresos de suministro.</div><div class="grid">
+    ${sectionChart("ch_enTipo","Entregas por tipo","",false)}
+    ${sectionChart("ch_enArea","Entregas por área (top 10)","",true)}
+    ${sectionChart("ch_enMes","Ingresos vs entregas por mes","",false)}
+  </div><div class="table-wrap" id="tbl_en"></div><div class="table-wrap" id="tbl_in"></div>`;
+  const t=topN(countBy(EN,r=>r.tipo),3); makeChart("ch_enTipo", mkDoughnut(t.labels,t.values,["#0d9488","#7c3aed"]));
+  const a=topN(countBy(EN,r=>r.area||"Sin dato"),N); makeChart("ch_enArea", mkHBar(a.labels,a.values,"#0d9488"));
+  const both=[...EN,...IN], ax=axisMonths(both);
+  makeChart("ch_enMes", mkBar(ax,[{label:"Entregas",data:monthCounts(EN,ax),backgroundColor:"#0d9488",borderRadius:4,barThickness:14},
+    {label:"Ingresos",data:monthCounts(IN,ax),backgroundColor:"#7c3aed",borderRadius:4,barThickness:14}]));
+  renderTable("tbl_en","entregas",
+    [{key:"fecha",label:"Fecha"},{key:"tipo",label:"Tipo"},{key:"area",label:"Área"},
+     {key:"cantidad",label:"Cant.",type:"n"},{key:"marca",label:"Marca/Modelo"}], "Detalle de entregas");
+  renderTable("tbl_in","ingresos",
+    [{key:"fecha",label:"Fecha"},{key:"tipo",label:"Tipo"},{key:"cantidad",label:"Cant.",type:"n"},
+     {key:"monto",label:"Monto",type:"n"},{key:"contrato",label:"Contrato"}], "Detalle de ingresos");
+}
+
+function renderOP(){
+  const RE=filterRows("reubicaciones"), LI=filterRows("licencias"), VA=filterRows("vacaciones"), AU=filterRows("audit");
+  document.getElementById("tabBody").innerHTML = `<div class="grid">
+    ${sectionChart("ch_reTipo","Reubicaciones por tipo","",false)}
+    ${sectionChart("ch_reMes","Reubicaciones por mes","",false)}
+    ${sectionChart("ch_licAp","Licencias por aplicativo","",true)}
+    ${sectionChart("ch_vaEstado","Vacaciones / incidencias por estado","",false)}
+    ${sectionChart("ch_auModulo","Actividad por módulo","",true)}
+  </div><div class="table-wrap" id="tbl_re"></div><div class="table-wrap" id="tbl_li"></div>`;
+  const t=topN(countBy(RE,r=>r.tipo),4); makeChart("ch_reTipo", mkDoughnut(t.labels,t.values,["#2563eb","#7c3aed","#0d9488","#f59e0b"]));
+  const rax=axisMonths(RE); makeChart("ch_reMes", mkBar(rax,[{label:"Reubicaciones",data:monthCounts(RE,rax),backgroundColor:"#2563eb",borderRadius:4,barThickness:16}]));
+  const l=topN(countBy(LI,r=>r.ap),N); makeChart("ch_licAp", mkHBar(l.labels,l.values,"#db2777"));
+  const v=topN(countBy(VA,r=>r.estado),5); makeChart("ch_vaEstado", mkDoughnut(v.labels,v.values,estadoColors(v.labels)));
+  const m=topN(countBy(AU,r=>r.modulo),N); makeChart("ch_auModulo", mkHBar(m.labels,m.values,"#64748b"));
+  renderTable("tbl_re","reubicaciones",
+    [{key:"fecha",label:"Fecha"},{key:"tipo",label:"Tipo"},{key:"equipo",label:"Equipo"},
+     {key:"origen",label:"Origen"},{key:"area",label:"Destino"}], "Detalle de reubicaciones");
+  renderTable("tbl_li","licencias",
+    [{key:"fecha",label:"Asignación"},{key:"ap",label:"Aplicativo"},{key:"hostname",label:"Hostname"},
+     {key:"persona",label:"Persona"},{key:"area",label:"Coordinación"}], "Detalle de licencias");
+}
+
+function renderHallazgos(){
+  const FINDINGS = [
+    {t:"Alto backlog de oficios recibidos sin contestar", c:"err",
+     d:"250 de 373 oficios recibidos (67 %) siguen pendientes de contestación. Es el indicador de riesgo más visible del sistema."},
+    {t:"Oficios emitidos casi al 100 % entregados", c:"",
+     d:"242 de 245 oficios realizados (99 %) están entregados; solo 3 sin entregar y ninguno cancelado."},
+    {t:"Nombres de área inconsistentes en los datos fuente", c:"warn",
+     d:"“Soporte Técnico” aparece como “Soporte Tecnico”, “Informática” como “Informatica”, y “Coordinador/Coordinación” mezclados. En este panel se normalizaron (acentos y mayúsculas) para consolidar las cuentas."},
+    {t:"Errores de año en fechas (captura)", c:"err",
+     d:"Varias fechas tienen el año mal capturado: vacaciones_incidencias con 2032 (debería ser 2026), oficios_realizados.fecha_fin y bitacora_equipo_portatil con 1926. Además hay recepciones registradas hasta 2026-10-19, posteriores al corte de exportación (2026-09-07). Estas fechas se excluyeron del eje temporal."},
+    {t:"Datos sucios en cuentas_usuario.estatus", c:"warn",
+     d:"La columna mezcla etiquetas (“Entregado”, “Pendiente”) con frases libres y hasta un objeto ArrayFormula de Excel sin evaluar: señal de captura manual sin validación."},
+    {t:"El campo dias_transcurridos no se está calculando", c:"warn",
+     d:"En oficios_recibidos, 186 registros valen 0 y 187 están vacíos: la antigüedad de los oficios no se llena de forma confiable."},
+    {t:"Cobertura parcial de claves foráneas de área", c:"warn",
+     d:"cuentas_usuario.coordinacion_id solo está poblada en 301 de 646 filas (47 %) y entregas_suministro.coordinacion_id en 44 de 161 (27 %). El resto aparece como “Sin dato”."},
+    {t:"Concentración de licencias en Microsoft Office", c:"",
+     d:"133 de 149 asignaciones (89 %) son Microsoft Office; Adobe Acrobat Pro aporta 11. Baja diversidad, pero coherente con el parque instalado."},
+    {t:"Tóner domina las entregas de suministro", c:"",
+     d:"94 entregas de tóner frente a 67 de papel, con solo 24 ingresos de inventario registrados en el periodo."},
+  ];
+  document.getElementById("tabBody").innerHTML = `<div class="findings">
+    <div class="count-badge">Auditoría detallada (con ejemplos por tabla y columna) en el archivo <b>DATA_AUDIT.md</b> de la raíz del proyecto.</div>
+    <br>` + FINDINGS.map(x=>`<div class="finding ${x.c}"><div class="t">${x.t}</div><div class="d">${x.d}</div></div>`).join("") + `</div>`;
+}
+
+function renderCalidad(){
+  const q = DATA.quality || {};
+  const fk = q.fk_coverage || [];
+  const fe = q.fechas_invalidas || {};
+  const es = q.estatus_sucios || {};
+  const ar = q.areas_inconsistentes || {};
+  const dt = q.dias_transcurridos || {};
+  const hall = q.hallazgos || [];
+
+  const below90 = fk.filter(x=>(x.pct||0) < 90).length;
+  const diasSinCalc = (dt.ceros||0) + (dt.nulos||0);
+
+  const kpis = [
+    {k:"Claves de área < 90%", v:below90, s:`de ${fk.length} tablas`},
+    {k:"Fechas inválidas", v:fe.total||0, s:"años fuera de 2000–2027"},
+    {k:"Estatus sucios", v:es.distintos||0, s:`${es.formulas_excel||0} fórmulas de Excel`},
+    {k:"Áreas duplicadas", v:ar.grupos||0, s:"grupos con variantes"},
+    {k:"Días sin calcular", v:diasSinCalc, s:`de ${dt.total||0} oficios recibidos`},
+  ];
+  const kpiHtml = `<div class="kpis">` + kpis.map(d=>
+    `<div class="kpi"><div class="k">${d.k}</div><div class="v">${d.v}</div><div class="s">${d.s}</div></div>`).join("") + `</div>`;
+
+  const hallHtml = `<div class="findings">
+    <div class="count-badge">Problemas de calidad detectados por la auditoría (detalle en <b>DATA_AUDIT.md</b>).</div>
+    <br>` + hall.map(h=>{
+      const c = h.severidad==="alta" ? "err" : h.severidad==="media" ? "warn" : "low";
+      return `<div class="finding ${c}"><div class="t">${esc(h.titulo)}</div><div class="d">${esc(h.descripcion)}</div></div>`;
+    }).join("") + `</div>`;
+
+  document.getElementById("tabBody").innerHTML = kpiHtml + `<div class="grid">
+    ${sectionChart("ch_calCoverage","Cobertura de clave de área por tabla","% de filas con área mapeada, por tabla",true)}
+    ${sectionChart("ch_calEstatus","Valores crudos de cuentas_usuario.estatus","Top 8 valores distintos en la columna estatus",true)}
+  </div>` + hallHtml;
+
+  const covLabels = fk.map(x=>x.tabla);
+  const covValues = fk.map(x=>x.pct);
+  const covColors = fk.map(x=> x.pct>=90 ? "#16a34a" : x.pct>=50 ? "#d97706" : "#dc2626");
+  makeChart("ch_calCoverage", mkHBar(covLabels, covValues, covColors));
+
+  const top8 = (es.valores||[]).slice(0,8);
+  makeChart("ch_calEstatus", mkHBar(top8.map(x=>x.valor), top8.map(x=>x.n), "#64748b"));
+}
+
+// ---------------- navegación ----------------
+function renderTabNav(){
+  document.getElementById("tabNav").innerHTML = TABS.map(t=>
+    `<button data-tab="${t.id}" class="${t.id===currentTabId?'active':''}">${t.label}</button>`).join("");
+  document.querySelectorAll("#tabNav button").forEach(b=>b.addEventListener("click", ()=>switchTab(b.dataset.tab)));
+}
+function switchTab(id){
+  currentTabId = id;
+  renderTabNav();
+  renderFilters();
+  destroyCharts();
+  RENDERERS[id]();
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+function refresh(){ destroyCharts(); RENDERERS[currentTabId](); }
+
+// ---------------- init ----------------
+document.getElementById("dateFrom").value = DATA.meta.minDate;
+document.getElementById("dateFrom").min = DATA.meta.minDate;
+document.getElementById("dateFrom").max = DATA.meta.maxDate;
+document.getElementById("dateTo").value = DATA.meta.maxDate;
+document.getElementById("dateTo").min = DATA.meta.minDate;
+document.getElementById("dateTo").max = DATA.meta.maxDate;
+document.getElementById("dateFrom").addEventListener("change", e=>{ state.from=e.target.value||DATA.meta.minDate; refresh(); });
+document.getElementById("dateTo").addEventListener("change", e=>{ state.to=e.target.value||DATA.meta.maxDate; refresh(); });
+document.getElementById("resetBtn").addEventListener("click", ()=>{
+  state.from=DATA.meta.minDate; state.to=DATA.meta.maxDate;
+  document.getElementById("dateFrom").value=state.from; document.getElementById("dateTo").value=state.to;
+  Object.keys(fstate).forEach(k=>fstate[k]=new Set());
+  GSEARCH=""; document.getElementById("globalSearch").value="";
+  N=10; document.getElementById("topNSlider").value=10; document.getElementById("topNVal").textContent=10;
+  renderFilters(); refresh();
+});
+
+applyTheme(THEME, false);
+document.getElementById("themeToggle").addEventListener("click", ()=>applyTheme(THEME==="dark"?"light":"dark", true));
+document.getElementById("acumChk").addEventListener("change", e=>{ ACUM = e.target.checked; refresh(); });
+document.getElementById("globalSearch").addEventListener("input", e=>{ GSEARCH = e.target.value; refresh(); });
+document.getElementById("topNSlider").addEventListener("input", e=>{
+  N = +e.target.value;
+  document.getElementById("topNVal").textContent = N;
+  refresh();
+});
+
+renderTabNav();
+renderFilters();
+renderResumen();
+</script>
+</body>
+</html>

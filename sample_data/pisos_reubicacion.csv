@@ -1,0 +1,5 @@
+id,nombre,creado_por_id,activo,created_at
+1,Registro de ejemplo 1,2,true,2026-06-08T14:28:00Z
+2,Registro de ejemplo 2,5,false,2026-04-03T17:48:00Z
+3,Registro de ejemplo 3,4,true,2026-07-23T17:33:00Z
+4,Registro de ejemplo 4,4,true,2026-04-18T11:23:00Z
