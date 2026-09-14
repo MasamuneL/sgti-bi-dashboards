@@ -8,6 +8,44 @@ un hospital) en Parquet normalizado y alimenta paneles de reportes de **solo lec
 > (`sample_data/`) con el mismo esquema (43 tablas) para que puedas ver los paneles
 > funcionando y sustituirlos después por tu propia exportación CSV.
 
+## Estructura
+
+```
+Analisis_de_SGTI/
+├── dashboard/                  # HTML v1 (histórica)
+├── dashboard_v2/               # HTML v2 (histórica)
+├── dashboard_v3/               # HTML v3 (VIGENTE) — export CSV, top-N, heatmap, búsqueda
+├── demo/                       # paneles generados con datos sintéticos (ver demo/v3)
+├── streamlit_dashboard*.py     # apps Streamlit v1/v2/v3 (v3 vigente)
+├── scripts/                    # pipeline CSV→Parquet, validación, auditoría, generadores
+├── sample_data/                # 43 CSVs sintéticos + manifest.json (plantillas sustituibles)
+├── Data/                       # tus datos reales (NO versionados; ver .gitignore)
+├── docs/                       # PLAN/FEATURES de cada iteración
+├── Makefile                    # atajos: make refresh / dashboard / demo / streamlit
+├── DATA_DICTIONARY.md          # tablas, esquemas y relaciones
+├── DATA_AUDIT.md               # auditoría de calidad de datos
+└── README.md
+```
+
+**Versión vigente: v3** (HTML en `dashboard_v3/`, Streamlit en `streamlit_dashboard_v3.py`).
+v1 y v2 se conservan por compatibilidad/historial, pero ya no se actualizan.
+
+## Atajos con make
+
+```bash
+make refresh    # CSV → Parquet + validación (datos reales en Data/)
+make dashboard  # genera dashboard_v3/index.html (HTML vigente)
+make demo       # regenera demo/v1..v3 con datos sintéticos
+make streamlit  # lanza Streamlit v3
+make help       # lista todos los targets
+```
+
+Estos atajos usan el venv del proyecto (`.venv/`); si no existe, créalo primero:
+
+```bash
+uv venv .venv && uv pip install -r requirements.txt
+```
+
 ## Qué hay aquí
 
 - `dashboard/`, `dashboard_v2/`, `dashboard_v3/` — paneles HTML (Chart.js vendored,
