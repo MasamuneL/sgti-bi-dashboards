@@ -22,6 +22,23 @@ __pycache__/
 .pytest_cache/
 .mypy_cache/
 
+# --- Credenciales / secretos (nunca versionar) ---
+.env
+.env.*
+!.env.example
+.streamlit/secrets.toml
+
+# --- Logs y artefactos de cobertura ---
+*.log
+.coverage
+htmlcov/
+
+# --- Editores / IDE ---
+.vscode/
+.idea/
+*.swp
+*~
+
 # --- Sistema operativo ---
 .DS_Store
 Thumbs.db
